@@ -2,9 +2,44 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>portfolio</title>
+    <title>Vikash Tiwary — Front-End Developer</title>
+    <meta
+      name="description"
+      content="Vikash Tiwary is a front-end developer working with React, TypeScript, Next.js and GraphQL. Experience, projects and contact details."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f3f1ec" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content="Vikash Tiwary — Front-End Developer" />
+    <meta
+      property="og:description"
+      content="Front-end developer working with React, TypeScript, Next.js and GraphQL."
+    />
+    <meta name="twitter:card" content="summary" />
+    <!-- TODO: add og:url, og:image and a canonical link once the domain is known. -->
+
+    <script>
+      // Apply the theme before first paint to avoid a flash of the wrong theme.
+      ;(function () {
+        try {
+          var stored = localStorage.getItem('theme')
+          var dark = stored
+            ? stored === 'dark'
+            : matchMedia('(prefers-color-scheme: dark)').matches
+          document.documentElement.classList.toggle('dark', dark)
+          // Marks that scripts run, so scroll reveals can start hidden.
+          document.documentElement.classList.add('js')
+          if (dark) {
+            document
+              .querySelector('meta[name="theme-color"]')
+              .setAttribute('content', '#15151d')
+          }
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
