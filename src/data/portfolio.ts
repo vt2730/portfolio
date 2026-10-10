@@ -14,7 +14,7 @@ export const portfolio: Portfolio = {
     location: null,
     email: 'vikash.me2797@gmail.com',
     // TODO: rename to /resume.pdf once confirmed (CLAUDE.md expects that path).
-    resumeUrl: '/vikash_res.pdf',
+    resumeUrl: `${import.meta.env.BASE_URL}vikash_res.pdf`,
     links: [
       {
         kind: 'linkedin',

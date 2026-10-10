@@ -14,6 +14,10 @@ const { render, structuredData } = await import(
 let html = await readFile(indexFile, 'utf8')
 if (!html.includes(ROOT)) throw new Error(`prerender: ${ROOT} not found`)
 
+// Vite's `base`, recovered from the emitted entry script (e.g. "/portfolio/").
+const base = html.match(/<script type="module"[^>]*src="([^"]*)assets\//)?.[1]
+if (base === undefined) throw new Error('prerender: entry script not found')
+
 // Only the Latin subsets are needed above the fold.
 const fonts = (await readdir(new URL('assets/', dist))).filter((file) =>
   /^geist(-mono)?-latin-wght-normal-[\w-]+\.woff2$/.test(file),
@@ -21,7 +25,7 @@ const fonts = (await readdir(new URL('assets/', dist))).filter((file) =>
 const headTags = [
   ...fonts.map(
     (file) =>
-      `<link rel="preload" href="/assets/${file}" as="font" type="font/woff2" crossorigin />`,
+      `<link rel="preload" href="${base}assets/${file}" as="font" type="font/woff2" crossorigin />`,
   ),
   `<script type="application/ld+json">${structuredData()}</script>`,
 ]
@@ -29,7 +33,7 @@ const headTags = [
 // Inline the single stylesheet so first paint needs no extra round trip.
 // The file stays in dist/assets for the fonts' relative URLs and caching.
 const stylesheet = html.match(
-  /<link rel="stylesheet"[^>]*href="\/(assets\/[^"]+\.css)"[^>]*>/,
+  /<link rel="stylesheet"[^>]*href="[^"]*?(assets\/[^"]+\.css)"[^>]*>/,
 )
 if (stylesheet) {
   const css = await readFile(new URL(stylesheet[1], dist), 'utf8')
