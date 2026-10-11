@@ -34,7 +34,7 @@ export function Projects({ projects }: ProjectsProps) {
                   className="label flex items-center gap-3 text-faint"
                 >
                   <span className="text-accent">{number}</span>
-                  <span className="h-px flex-1 bg-line" />
+                  <span className="draw-x h-px flex-1 bg-line" />
                 </p>
                 <h3
                   id={`${project.id}-title`}
@@ -54,7 +54,10 @@ export function Projects({ projects }: ProjectsProps) {
                           size="sm"
                         >
                           View project
-                          <Icon name="arrow-up-right" className="size-4" />
+                          <Icon
+                            name="arrow-up-right"
+                            className="nudge-out size-4"
+                          />
                           <span className="sr-only">
                             {' '}
                             {project.name} (opens in a new tab)
@@ -75,7 +78,10 @@ export function Projects({ projects }: ProjectsProps) {
                             <Icon name="github" className="size-4" />
                           )}
                           {link.label}
-                          <Icon name="arrow-up-right" className="size-3.5" />
+                          <Icon
+                            name="arrow-up-right"
+                            className="nudge-out size-3.5"
+                          />
                           <span className="sr-only">
                             {' '}
                             for {project.name} (opens in a new tab)

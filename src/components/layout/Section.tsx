@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { SectionId } from '../../types/portfolio'
 import { Container } from '../ui/Container'
 import { Reveal } from '../ui/Reveal'
+import { SignalGrid } from '../ui/SignalGrid'
 
 export type SectionTone = 'canvas' | 'grid'
 
@@ -32,12 +33,7 @@ export function Section({
       aria-labelledby={headingId}
       className="relative isolate border-t border-line py-20 md:py-28"
     >
-      {tone === 'grid' && (
-        <div
-          aria-hidden="true"
-          className="grid-bg pointer-events-none absolute inset-0 -z-10"
-        />
-      )}
+      {tone === 'grid' && <SignalGrid />}
 
       <Container>
         <Reveal as="header" className="grid gap-6 lg:grid-cols-12 lg:gap-8">
@@ -46,14 +42,16 @@ export function Section({
               aria-hidden="true"
               className="label flex items-center gap-3 text-accent"
             >
-              <span className="h-px w-8 bg-accent" />
+              <span className="draw-x h-px w-8 bg-accent" />
               {String(index).padStart(2, '0')}
             </p>
             <h2
               id={headingId}
               className="display mt-5 text-[clamp(2rem,4.5vw,3.25rem)]"
             >
-              {title}
+              <span className="mask-reveal">
+                <span>{title}</span>
+              </span>
             </h2>
           </div>
           {lead && (

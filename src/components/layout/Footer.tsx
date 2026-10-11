@@ -14,10 +14,10 @@ export function Footer({ name }: FooterProps) {
         </p>
         <a
           href="#top"
-          className="-my-2 inline-flex items-center gap-1.5 py-2 transition-colors duration-150 hover:text-ink"
+          className="group -my-2 inline-flex items-center gap-1.5 py-2 transition-colors duration-150 hover:text-ink"
         >
           Back to top
-          <Icon name="arrow-up" className="size-3.5" />
+          <Icon name="arrow-up" className="nudge-up size-3.5" />
         </a>
       </Container>
     </footer>

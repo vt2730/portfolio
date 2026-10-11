@@ -52,7 +52,7 @@ export function Highlights({
                 key={highlight.id}
                 as="li"
                 index={index}
-                className="card card-hover flex flex-col p-6"
+                className="group card card-hover flex flex-col p-6"
               >
                 {highlight.metric && (
                   <p className="mb-5">
@@ -71,7 +71,7 @@ export function Highlights({
                 <p className="mt-auto pt-6">
                   <span
                     aria-hidden="true"
-                    className="relative mb-3 block h-px w-full bg-line before:absolute before:top-0 before:left-0 before:h-px before:w-6 before:bg-accent"
+                    className="relative mb-3 block h-px w-full bg-line before:absolute before:top-0 before:left-0 before:h-px before:w-6 before:bg-accent before:transition-[width] before:duration-700 before:ease-out-expo group-hover:before:w-full motion-reduce:before:transition-none"
                   />
                   <span className="label text-faint">
                     {companyById.get(highlight.experienceId)}

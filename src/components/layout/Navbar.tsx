@@ -75,7 +75,7 @@ export function Navbar({ profile, items }: NavbarProps) {
       variant="accent"
       size="sm"
     >
-      <Icon name="download" className="size-4" />
+      <Icon name="download" className="nudge-down size-4" />
       Résumé
     </ButtonLink>
   )
@@ -150,7 +150,7 @@ export function Navbar({ profile, items }: NavbarProps) {
         <div
           id="mobile-menu"
           hidden={!menuOpen}
-          className="mt-2 rounded-2xl border border-line bg-canvas/95 p-3 shadow-[0_20px_50px_-20px_rgb(0_0_0/0.45)] backdrop-blur-xl lg:hidden"
+          className="mt-2 rounded-2xl border border-line bg-canvas/95 p-3 shadow-[0_20px_50px_-20px_rgb(0_0_0/0.45)] backdrop-blur-xl transition-[opacity,translate] duration-300 ease-out-expo starting:-translate-y-2 starting:opacity-0 motion-reduce:transition-none lg:hidden"
         >
           <nav aria-label="Primary">
             <ul className="flex flex-col">

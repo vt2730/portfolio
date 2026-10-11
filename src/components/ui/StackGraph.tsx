@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react'
+import { useId, useMemo, useState, type CSSProperties } from 'react'
 import {
   layerLabels,
   layerOrder,
@@ -158,9 +158,11 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
       className={`rounded-lg border border-line bg-canvas ${className}`}
     >
       <div className="overflow-x-auto">
+        {/* `data-inview` boots the map column by column (see index.css). */}
         <div
-          className="relative m-4"
-          style={{ width, height }}
+          data-inview=""
+          className="stack-graph relative m-4"
+          style={{ width, height, '--cols': layers.length } as CSSProperties}
           onPointerLeave={() => setHovered(null)}
           onKeyDown={(event) => {
             if (event.key === 'Escape') setPinned(null)
@@ -170,8 +172,13 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
             <span
               key={layer}
               aria-hidden="true"
-              className="label absolute top-0 text-faint"
-              style={{ left: col * COL + (COL - NODE_W) / 2 }}
+              className="stack-label label absolute top-0 text-faint"
+              style={
+                {
+                  left: col * COL + (COL - NODE_W) / 2,
+                  '--col': col,
+                } as CSSProperties
+              }
             >
               {layerLabels[layer]}
             </span>
@@ -181,7 +188,7 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
             aria-hidden="true"
             width={width}
             height={height}
-            className="pointer-events-none absolute inset-0 overflow-visible"
+            className="stack-edges pointer-events-none absolute inset-0 overflow-visible"
           >
             {edges.map((edge) => {
               const on =
@@ -195,7 +202,7 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
                   strokeWidth={on ? 1.5 : 1}
                   className={`transition-[stroke,opacity] duration-200 motion-reduce:transition-none ${
                     on
-                      ? 'stroke-accent'
+                      ? 'stack-flow stroke-accent'
                       : focus
                         ? 'stroke-line-strong opacity-30'
                         : 'stroke-line-strong'
@@ -223,13 +230,17 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
                     current === node.name ? null : node.name,
                   )
                 }
-                style={{
-                  left: x - NODE_W / 2,
-                  top: y - NODE_H / 2,
-                  width: NODE_W,
-                  height: NODE_H,
-                }}
-                className={`absolute inline-flex cursor-pointer items-center justify-center rounded-md border bg-surface px-5 font-mono text-xs transition-[border-color,opacity,color] duration-200 motion-reduce:transition-none ${
+                style={
+                  {
+                    left: x - NODE_W / 2,
+                    top: y - NODE_H / 2,
+                    width: NODE_W,
+                    height: NODE_H,
+                    '--col': node.col,
+                    '--row': node.row,
+                  } as CSSProperties
+                }
+                className={`stack-node absolute inline-flex cursor-pointer items-center justify-center rounded-md border bg-surface px-5 font-mono text-xs transition-[border-color,opacity,color] duration-200 motion-reduce:transition-none ${
                   isFocus
                     ? 'border-accent text-ink'
                     : isConnected
@@ -241,7 +252,7 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
                 {(isFocus || isConnected) && (
                   <span
                     aria-hidden="true"
-                    className={`absolute left-2.5 size-1.5 rounded-full ${
+                    className={`absolute left-2.5 size-1.5 rounded-full transition-transform duration-300 ease-out-expo starting:scale-0 motion-reduce:transition-none ${
                       isFocus ? 'bg-accent' : 'bg-line-strong'
                     }`}
                   />

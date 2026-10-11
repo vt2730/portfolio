@@ -9,7 +9,7 @@ interface ContactProps {
 }
 
 const tile =
-  'card card-hover flex items-center justify-between px-5 py-4 text-[15px] font-medium'
+  'group card card-hover flex items-center justify-between px-5 py-4 text-[15px] font-medium'
 
 export function Contact({ profile }: ContactProps) {
   return (
@@ -42,7 +42,10 @@ export function Contact({ profile }: ContactProps) {
                 className={tile}
               >
                 {link.label}
-                <Icon name="arrow-up-right" className="size-4 text-faint" />
+                <Icon
+                  name="arrow-up-right"
+                  className="nudge-out size-4 text-faint"
+                />
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
             </li>
@@ -54,7 +57,7 @@ export function Contact({ profile }: ContactProps) {
               className={tile}
             >
               Résumé (PDF)
-              <Icon name="download" className="size-4 text-faint" />
+              <Icon name="download" className="nudge-down size-4 text-faint" />
             </a>
           </li>
         </ul>

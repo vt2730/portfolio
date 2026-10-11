@@ -11,6 +11,7 @@ import type { Experience, Profile } from '../../types/portfolio'
 import { ButtonLink } from '../ui/ButtonLink'
 import { Container } from '../ui/Container'
 import { Icon, type IconName } from '../ui/Icon'
+import { SignalGrid } from '../ui/SignalGrid'
 
 interface HeroProps {
   profile: Profile
@@ -71,10 +72,7 @@ export function Hero({ profile, experience }: HeroProps) {
       aria-labelledby="hero-heading"
       className="relative isolate flex min-h-svh flex-col justify-center pt-28 pb-12 md:pt-32"
     >
-      <div
-        aria-hidden="true"
-        className="grid-bg pointer-events-none absolute inset-0 -z-10"
-      />
+      <SignalGrid intro />
 
       <Container>
         {current && (
@@ -140,14 +138,14 @@ export function Hero({ profile, experience }: HeroProps) {
         >
           <ButtonLink href="#projects" variant="accent">
             View projects
-            <Icon name="arrow-down" className="size-4" />
+            <Icon name="arrow-down" className="nudge-down size-4" />
           </ButtonLink>
           <ButtonLink
             href={profile.resumeUrl}
             download={resumeFileName(profile.name)}
             variant="secondary"
           >
-            <Icon name="download" className="size-4" />
+            <Icon name="download" className="nudge-down size-4" />
             Download résumé
           </ButtonLink>
           {socialLinks.length > 0 && (
@@ -170,7 +168,7 @@ export function Hero({ profile, experience }: HeroProps) {
         </div>
 
         <dl
-          className="fade-in mt-16 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-line pt-6 md:mt-24 md:grid-cols-4"
+          className="fade-in rule-draw relative mt-16 grid grid-cols-2 gap-x-6 gap-y-6 pt-6 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-line md:mt-24 md:grid-cols-4"
           style={delay(600)}
         >
           {meta.map((item) => (

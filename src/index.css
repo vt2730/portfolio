@@ -60,6 +60,7 @@
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 @layer base {
@@ -92,6 +93,20 @@
     outline-offset: 3px;
     border-radius: 4px;
   }
+
+  /* Theme switch (useTheme.ts): the new theme is revealed in a circle that
+     grows from the toggle, so the default cross-fade is replaced and colour
+     transitions pause until the new theme has been captured. */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  [data-theme-switching],
+  [data-theme-switching] * {
+    transition: none !important;
+  }
 }
 
 @layer components {
@@ -111,15 +126,23 @@
   /* Faint blueprint grid behind the hero and contact sections, fading out
      towards the edges so it never competes with the content. */
   .grid-bg {
+    --grid-size: 56px; /* SignalGrid sets its own to match its routes. */
     background-image:
       linear-gradient(var(--grid-line) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 56px 56px;
+    background-size: var(--grid-size) var(--grid-size);
+    /* Runs a vertical line through the centre, so SignalGrid can count
+       columns out from it at any width. */
+    background-position: calc(50% + var(--grid-size) / 2) 0;
     mask-image: radial-gradient(
       ellipse 80% 70% at 50% 40%,
       #000 30%,
       transparent 100%
     );
+    /* Spelled out so the hero can grow the mask from its centre. */
+    mask-position: 50% 40%;
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
   }
 
   /* Bordered card surface shared by every section. */
@@ -173,12 +196,18 @@
 
   /* ------------------------------------------------------------------
      Hero entrance — each line slides up from behind a clipped mask.
+     `.mask-reveal` is the in-view version used by section titles.
   ------------------------------------------------------------------ */
-  .mask-line {
+  .mask-line,
+  .mask-reveal {
     display: block;
     overflow: hidden;
     padding-bottom: 0.08em;
     margin-bottom: -0.08em;
+  }
+
+  .mask-reveal > * {
+    display: block;
   }
 
   .js .mask-line > * {
@@ -244,7 +273,6 @@
   /* ------------------------------------------------------------------
      Contribution heatmap. Cells are single paths per intensity level;
      `color` feeds both fill and stroke so each level is one token.
-     Levels 1–4 fade in after the card reveals, low to high.
   ------------------------------------------------------------------ */
   .heatmap {
     --heat-bg: var(--surface);
@@ -282,19 +310,8 @@
     color: var(--accent);
   }
 
-  .js [data-reveal] .heat-fill {
-    opacity: 0;
-    transition: opacity 0.6s var(--ease-out-quint);
-    transition-delay: calc(150ms + var(--heat-order, 0) * 100ms);
-  }
-
-  .js [data-reveal][data-visible] .heat-fill {
-    opacity: 1;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .js [data-reveal],
-    .js [data-reveal] .heat-fill,
     .js .mask-line > *,
     .js .fade-in,
     .scroll-progress {
@@ -306,6 +323,318 @@
 
     .scroll-progress {
       display: none;
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     Motion graphics. Every animation below is gated on
+     `prefers-reduced-motion: no-preference`; without it, each piece
+     simply renders in its finished state.
+
+     In-view pieces hang off useReveal()'s `data-visible` flag. Their
+     animations are attached up front but paused, and the flag sets them
+     running, so the pre-entrance state comes from the animation's
+     backwards fill instead of a static style. That keeps it from
+     retriggering the elements' own hover transitions on the same
+     properties.
+  ------------------------------------------------------------------ */
+
+  /* Signal grid (SignalGrid.tsx): pulses routed along the grid lines.
+     Each straight run is a track that clips its pulse, so the pulse
+     emerges at one intersection and drains into the next while only its
+     `transform` animates. Idle pulses wait just outside their track. */
+  .signal-grid {
+    overflow: hidden;
+  }
+
+  .signal,
+  .signal-node {
+    position: absolute;
+    top: calc(var(--row) * var(--grid-size));
+    left: calc(50% + var(--col) * var(--grid-size));
+  }
+
+  .signal {
+    overflow: hidden;
+  }
+
+  .signal::after {
+    content: '';
+    position: absolute;
+  }
+
+  .signal[data-axis='x'] {
+    width: calc(var(--span) * var(--grid-size));
+    height: 1px;
+  }
+
+  .signal[data-axis='x']::after {
+    top: 0;
+    right: 100%;
+    width: var(--pulse-length);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent));
+  }
+
+  .signal[data-axis='y'] {
+    width: 1px;
+    height: calc(var(--span) * var(--grid-size));
+  }
+
+  .signal[data-axis='y']::after {
+    bottom: 100%;
+    left: 0;
+    width: 1px;
+    height: var(--pulse-length);
+    background: linear-gradient(180deg, transparent, var(--accent));
+  }
+
+  /* Mirrored tracks run right to left and bottom to top. */
+  .signal[data-axis='x'][data-reverse] {
+    scale: -1 1;
+  }
+
+  .signal[data-axis='y'][data-reverse] {
+    scale: 1 -1;
+  }
+
+  /* A via-like square centred on the intersection. */
+  .signal-node {
+    width: 5px;
+    height: 5px;
+    translate: -2px -2px;
+    border: 1px solid var(--accent);
+    background: var(--canvas);
+    opacity: 0;
+  }
+
+  @keyframes signal-x {
+    to {
+      transform: translateX(
+        calc(var(--span) * var(--grid-size) + var(--pulse-length))
+      );
+    }
+  }
+
+  @keyframes signal-y {
+    to {
+      transform: translateY(
+        calc(var(--span) * var(--grid-size) + var(--pulse-length))
+      );
+    }
+  }
+
+  @keyframes node-flash {
+    from {
+      opacity: 0;
+      scale: 0.3;
+    }
+    20% {
+      opacity: 1;
+      scale: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes grid-on {
+    from {
+      opacity: 0;
+      mask-size: 30% 30%;
+    }
+  }
+
+  /* Contribution heatmap scan line: a 1px beam with a soft trail. */
+  .heat-scan {
+    overflow: hidden;
+  }
+
+  .heat-scan-head {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .heat-scan-head::before,
+  .heat-scan-head::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+  }
+
+  .heat-scan-head::before {
+    right: 100%;
+    width: 4rem;
+    background: linear-gradient(90deg, transparent, var(--accent-soft));
+  }
+
+  .heat-scan-head::after {
+    left: 0;
+    width: 1px;
+    background: var(--accent);
+  }
+
+  @keyframes scan-head {
+    0% {
+      opacity: 0;
+      transform: translateX(0);
+    }
+    10%,
+    80% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+  }
+
+  .stack-graph {
+    --stack-step: 110ms;
+  }
+
+  @keyframes node-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.97);
+    }
+  }
+
+  @keyframes wipe-x {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0);
+    }
+  }
+
+  @keyframes dash-flow {
+    to {
+      stroke-dashoffset: -8;
+    }
+  }
+
+  @keyframes draw {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The hero grid powers on from its centre, then signals run a single
+       pass (see SignalGrid for why it is not a loop). Linear timing keeps
+       a pulse's speed constant as it turns from one track into the next. */
+    .js .signal-grid[data-intro] {
+      animation: grid-on 1.8s var(--ease-out-quint) both;
+    }
+
+    .signal-grid[data-active] .signal::after {
+      animation: signal-x var(--duration) linear var(--delay) both;
+    }
+
+    .signal-grid[data-active] .signal[data-axis='y']::after {
+      animation-name: signal-y;
+    }
+
+    .signal-grid[data-active] .signal-node {
+      animation: node-flash var(--flash) var(--ease-out-quint) var(--delay)
+        both;
+    }
+
+    /* Section titles rise from a mask while their rule draws in. */
+    .js [data-reveal] .mask-reveal > * {
+      transform: translateY(105%);
+      transition: transform 0.9s var(--ease-out-expo)
+        calc(var(--reveal-delay, 0ms) + 60ms);
+    }
+
+    .js [data-reveal] .draw-x {
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.9s var(--ease-out-expo)
+        calc(var(--reveal-delay, 0ms) + 150ms);
+    }
+
+    .js [data-reveal][data-visible] :is(.mask-reveal > *, .draw-x) {
+      transform: none;
+    }
+
+    /* The hero's rule draws in with the rest of its entrance. */
+    .js .rule-draw::before {
+      transform-origin: left;
+      animation: draw 1.2s var(--ease-out-expo) var(--fade-delay, 0ms) both;
+    }
+
+    /* Stack maps boot left to right: each column lights up as a wipe
+       draws the edges into it. */
+    .js [data-inview] .stack-label {
+      animation: fade 0.5s var(--ease-out-quint)
+        calc(var(--col) * var(--stack-step)) backwards paused;
+    }
+
+    .js [data-inview] .stack-node {
+      animation: node-in 0.6s var(--ease-out-expo)
+        calc(var(--col) * var(--stack-step) + var(--row) * 40ms) backwards
+        paused;
+    }
+
+    .js [data-inview] .stack-edges {
+      animation: wipe-x calc(var(--cols) * var(--stack-step)) linear
+        backwards paused;
+    }
+
+    /* Edges of the focused node flow left to right, like React Flow's
+       animated edges. */
+    .stack-flow {
+      stroke-dasharray: 4 4;
+      animation: dash-flow 0.5s linear infinite;
+    }
+
+    /* Each year of contributions is swept in by a scan line. */
+    .js [data-inview] .heatmap {
+      animation: wipe-x 1.4s var(--ease-in-out-cubic) 0.1s backwards paused;
+    }
+
+    .js [data-inview] .heat-scan-head {
+      animation: scan-head 1.4s var(--ease-in-out-cubic) 0.1s backwards
+        paused;
+    }
+
+    .js
+      [data-inview][data-visible]
+      :is(.stack-label, .stack-node, .stack-edges, .heatmap, .heat-scan-head) {
+      animation-play-state: running;
+    }
+
+    /* The activity split fills like a progress bar. */
+    .js [data-reveal] .mix-bar {
+      animation: wipe-x 1.1s var(--ease-out-quint) 0.25s backwards paused;
+    }
+
+    .js [data-reveal][data-visible] .mix-bar {
+      animation-play-state: running;
+    }
+  }
+
+  /* Icons lean the way they point while their `group` link is hovered. */
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    :is(.nudge-down, .nudge-up, .nudge-out) {
+      transition: translate 0.3s var(--ease-out-expo);
+    }
+
+    .group:hover .nudge-down {
+      translate: 0 2px;
+    }
+
+    .group:hover .nudge-up {
+      translate: 0 -2px;
+    }
+
+    .group:hover .nudge-out {
+      translate: 2px -2px;
     }
   }
 }

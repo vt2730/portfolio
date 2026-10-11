@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import {
   CELL,
   LABEL_LEFT,
@@ -106,10 +105,10 @@ export function GitHubActivity({ activity, profile }: GitHubActivityProps) {
             href={githubLink.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[15px] font-medium text-muted underline decoration-line underline-offset-[5px] transition-colors duration-200 hover:text-ink hover:decoration-accent"
+            className="group inline-flex items-center gap-1 text-[15px] font-medium text-muted underline decoration-line underline-offset-[5px] transition-colors duration-200 hover:text-ink hover:decoration-accent"
           >
             Follow along on GitHub
-            <Icon name="arrow-up-right" className="size-3.5" />
+            <Icon name="arrow-up-right" className="nudge-out size-3.5" />
             <span className="sr-only">(opens in a new tab)</span>
           </a>
         )}
@@ -144,7 +143,7 @@ function YearCard({ year, capturedOn }: YearCardProps) {
         <div className="w-full max-w-sm sm:w-80">
           <div
             aria-hidden="true"
-            className="flex h-1.5 gap-0.5 overflow-hidden rounded-full"
+            className="mix-bar flex h-1.5 gap-0.5 overflow-hidden rounded-full"
           >
             {mix.map((entry) => (
               <span
@@ -174,39 +173,42 @@ function YearCard({ year, capturedOn }: YearCardProps) {
       </header>
 
       <div className="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
-        <svg
-          aria-hidden="true"
-          focusable="false"
-          viewBox={`0 0 ${layout.width} ${layout.height}`}
-          className="heatmap block h-auto w-full min-w-[36rem] font-mono"
-        >
-          {layout.months.map((month) => (
-            <text key={month.label} x={month.x} y={9}>
-              {month.label}
-            </text>
-          ))}
-          {WEEKDAYS.map((day) => (
-            <text
-              key={day.label}
-              x={0}
-              y={LABEL_TOP + day.row * STEP + CELL / 2 + 3.5}
-              textLength={LABEL_LEFT - 8}
-              lengthAdjust="spacingAndGlyphs"
-            >
-              {day.label}
-            </text>
-          ))}
-          {LEVELS.map((level) =>
-            layout.paths[level] ? (
-              <path
-                key={level}
-                d={layout.paths[level]}
-                className={`heat-${level} ${level > 0 ? 'heat-fill' : ''}`}
-                style={{ '--heat-order': level } as CSSProperties}
-              />
-            ) : null,
-          )}
-        </svg>
+        {/* `data-inview` sweeps the year in behind a scan line. */}
+        <div data-inview="" className="heat-scan relative min-w-[36rem]">
+          <svg
+            aria-hidden="true"
+            focusable="false"
+            viewBox={`0 0 ${layout.width} ${layout.height}`}
+            className="heatmap block h-auto w-full font-mono"
+          >
+            {layout.months.map((month) => (
+              <text key={month.label} x={month.x} y={9}>
+                {month.label}
+              </text>
+            ))}
+            {WEEKDAYS.map((day) => (
+              <text
+                key={day.label}
+                x={0}
+                y={LABEL_TOP + day.row * STEP + CELL / 2 + 3.5}
+                textLength={LABEL_LEFT - 8}
+                lengthAdjust="spacingAndGlyphs"
+              >
+                {day.label}
+              </text>
+            ))}
+            {LEVELS.map((level) =>
+              layout.paths[level] ? (
+                <path
+                  key={level}
+                  d={layout.paths[level]}
+                  className={`heat-${level}`}
+                />
+              ) : null,
+            )}
+          </svg>
+          <span aria-hidden="true" className="heat-scan-head" />
+        </div>
       </div>
     </article>
   )
