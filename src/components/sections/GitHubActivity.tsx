@@ -52,7 +52,7 @@ export function GitHubActivity({ activity, profile }: GitHubActivityProps) {
         <p>
           <CountUp
             value={total}
-            className="display block text-[clamp(3.5rem,8vw,6rem)] text-accent tabular-nums"
+            className="block font-mono text-[clamp(3rem,7vw,5rem)] font-medium tracking-tight text-ink tabular-nums"
           />
           <span className="mt-2 block text-[15px] text-muted">
             contributions on GitHub since {first}
@@ -60,13 +60,13 @@ export function GitHubActivity({ activity, profile }: GitHubActivityProps) {
         </p>
         <dl className="grid grid-cols-2 gap-6 border-t border-line pt-6 font-mono text-xs sm:border-t-0 sm:border-l sm:pt-0 sm:pl-8">
           <div>
-            <dt className="text-faint">Busiest year</dt>
+            <dt className="label text-faint">Busiest year</dt>
             <dd className="mt-1.5 text-sm text-ink tabular-nums">
               {busiest.year} · <CountUp value={busiest.total} />
             </dd>
           </div>
           <div>
-            <dt className="text-faint">Snapshot</dt>
+            <dt className="label text-faint">Snapshot</dt>
             <dd className="mt-1.5 text-sm text-ink">
               {formatDate(capturedOn)}
             </dd>
@@ -80,7 +80,7 @@ export function GitHubActivity({ activity, profile }: GitHubActivityProps) {
             key={year.year}
             as="li"
             index={index}
-            className="rounded-3xl border border-line bg-canvas p-5 sm:p-6"
+            className="card p-5 sm:p-6"
           >
             <YearCard year={year} capturedOn={capturedOn} />
           </Reveal>
@@ -132,10 +132,10 @@ function YearCard({ year, capturedOn }: YearCardProps) {
     <article aria-labelledby={headingId} className="grid gap-6">
       <header className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
         <div className="flex items-baseline gap-4">
-          <h3 id={headingId} className="font-mono text-xs text-faint">
+          <h3 id={headingId} className="label text-faint">
             {year.year}
           </h3>
-          <p className="display text-[2rem] tabular-nums">
+          <p className="font-mono text-[2rem] font-medium tracking-tight tabular-nums">
             <CountUp value={year.total} duration={1200} />
             <span className="sr-only"> contributions</span>
           </p>

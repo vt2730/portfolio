@@ -3,20 +3,10 @@ import { useCallback, useSyncExternalStore } from 'react'
 export type Theme = 'light' | 'dark'
 
 const STORAGE_KEY = 'theme'
-const DARK_QUERY = '(prefers-color-scheme: dark)'
 // Keep in sync with --canvas in index.css and the inline script in index.html.
 const THEME_COLORS: Record<Theme, string> = {
-  light: '#f3f1ec',
-  dark: '#15151d',
-}
-
-function readStoredTheme(): Theme | null {
-  try {
-    const value = localStorage.getItem(STORAGE_KEY)
-    return value === 'light' || value === 'dark' ? value : null
-  } catch {
-    return null
-  }
+  light: '#fafafa',
+  dark: '#0a0d12',
 }
 
 function applyTheme(theme: Theme) {
@@ -31,25 +21,15 @@ function getTheme(): Theme {
 }
 
 // The class on <html> is the source of truth, so it is treated as an external
-// store. The inline script in index.html sets it before first paint.
+// store. The inline script in index.html sets it before first paint; the site
+// is dark by default and only switches when the visitor picks light.
 function subscribe(onChange: () => void) {
   const observer = new MutationObserver(onChange)
   observer.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['class'],
   })
-
-  // Follow the OS setting until the visitor picks a theme explicitly.
-  const query = matchMedia(DARK_QUERY)
-  const onSystemChange = (event: MediaQueryListEvent) => {
-    if (readStoredTheme() === null) applyTheme(event.matches ? 'dark' : 'light')
-  }
-  query.addEventListener('change', onSystemChange)
-
-  return () => {
-    observer.disconnect()
-    query.removeEventListener('change', onSystemChange)
-  }
+  return () => observer.disconnect()
 }
 
 /** `null` during prerender and hydration, when the theme isn't known yet. */

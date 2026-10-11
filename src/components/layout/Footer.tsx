@@ -7,7 +7,7 @@ interface FooterProps {
 
 export function Footer({ name }: FooterProps) {
   return (
-    <footer>
+    <footer className="border-t border-line">
       <Container className="flex items-center justify-between gap-4 py-8 font-mono text-xs text-faint">
         <p suppressHydrationWarning>
           © {new Date().getFullYear()} {name}

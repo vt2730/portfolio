@@ -9,7 +9,6 @@ import { ExperienceTimeline } from './components/sections/ExperienceTimeline'
 import { GitHubActivity } from './components/sections/GitHubActivity'
 import { Hero } from './components/sections/Hero'
 import { Highlights } from './components/sections/Highlights'
-import { Marquee } from './components/sections/Marquee'
 import { Projects } from './components/sections/Projects'
 import { Skills } from './components/sections/Skills'
 import { portfolio } from './data/portfolio'
@@ -50,7 +49,6 @@ const sections: Record<SectionId, SectionConfig> = {
   },
   skills: {
     lead: 'The tools I reach for, grouped by what they are for.',
-    tone: 'panel',
     content: <Skills groups={skills} />,
   },
   experience: {
@@ -59,7 +57,6 @@ const sections: Record<SectionId, SectionConfig> = {
   },
   projects: {
     lead: 'Side projects built end to end, from schema to UI.',
-    tone: 'panel',
     content: <Projects projects={projects} />,
   },
   highlights: {
@@ -74,12 +71,11 @@ const sections: Record<SectionId, SectionConfig> = {
   },
   github: {
     lead: 'Four years of commits, pull requests and reviews, traced from my contribution graph.',
-    tone: 'panel',
     content: <GitHubActivity activity={github} profile={profile} />,
   },
   contact: {
     lead: 'Open to conversations about front-end roles and interesting problems.',
-    tone: 'inverted',
+    tone: 'grid',
     content: <Contact profile={profile} />,
   },
 }
@@ -93,7 +89,6 @@ export default function App() {
       <Navbar profile={profile} items={navigation} />
       <main id="main" tabIndex={-1} className="outline-none">
         <Hero profile={profile} experience={experience} />
-        <Marquee groups={skills} />
         {navigation.map((item, index) => {
           const { lead, tone, content } = sections[item.id]
           return (

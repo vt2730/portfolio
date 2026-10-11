@@ -7,23 +7,23 @@ interface SkillsProps {
 
 export function Skills({ groups }: SkillsProps) {
   return (
-    <dl className="divide-y divide-line border-y border-line">
+    <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {groups.map((group, index) => (
         <Reveal
           key={group.category}
           index={index}
-          className="grid gap-3 py-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] md:items-baseline md:gap-8"
+          className="card card-hover p-5"
         >
-          <dt className="display text-[clamp(1.5rem,3.2vw,2.5rem)] text-ink">
+          <dt className="label flex items-center gap-3 text-faint">
+            <span aria-hidden="true" className="font-mono text-accent">
+              {String(index + 1).padStart(2, '0')}
+            </span>
             {group.category}
           </dt>
-          <dd>
+          <dd className="mt-4">
             <ul className="flex flex-wrap gap-2">
               {group.items.map((item) => (
-                <li
-                  key={item}
-                  className="rounded-full border border-line bg-canvas px-3.5 py-1.5 text-sm text-muted transition-colors duration-200 hover:border-accent hover:text-ink"
-                >
+                <li key={item} className="chip">
                   {item}
                 </li>
               ))}

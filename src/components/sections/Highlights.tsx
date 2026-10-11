@@ -33,12 +33,12 @@ export function Highlights({
     .filter((group) => group.items.length > 0)
 
   return (
-    <div className="space-y-14">
+    <div className="space-y-12">
       {groups.map((group) => (
         <div key={group.theme}>
           <Reveal
             as="h3"
-            className="flex items-center gap-3 font-mono text-xs tracking-wide text-muted uppercase"
+            className="label flex items-center gap-3 text-muted"
           >
             <span
               aria-hidden="true"
@@ -46,32 +46,36 @@ export function Highlights({
             />
             {group.label}
           </Reveal>
-          <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+          <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {group.items.map((highlight, index) => (
               <Reveal
                 key={highlight.id}
                 as="li"
                 index={index}
-                className={`lift flex flex-col rounded-3xl border border-line p-6 ${
-                  highlight.metric ? 'inverted' : 'bg-elevated/60'
-                }`}
+                className="card card-hover flex flex-col p-6"
               >
                 {highlight.metric && (
-                  <p className="mb-6 flex items-baseline gap-2">
+                  <p className="mb-5">
                     <MetricValue value={highlight.metric.value} />
-                    <span className="text-sm text-muted">
+                    <span className="mt-1 block text-sm text-muted">
                       {highlight.metric.label}
                     </span>
                   </p>
                 )}
-                <h4 className="text-lg font-semibold tracking-tight">
+                <h4 className="text-[17px] font-semibold tracking-tight">
                   {highlight.title}
                 </h4>
                 <p className="mt-2 text-[15px] leading-relaxed text-muted">
                   {highlight.description}
                 </p>
-                <p className="mt-auto pt-5 font-mono text-xs text-faint">
-                  {companyById.get(highlight.experienceId)}
+                <p className="mt-auto pt-6">
+                  <span
+                    aria-hidden="true"
+                    className="relative mb-3 block h-px w-full bg-line before:absolute before:top-0 before:left-0 before:h-px before:w-6 before:bg-accent"
+                  />
+                  <span className="label text-faint">
+                    {companyById.get(highlight.experienceId)}
+                  </span>
                 </p>
               </Reveal>
             ))}
@@ -84,7 +88,7 @@ export function Highlights({
 
 function MetricValue({ value }: { value: string }) {
   const className =
-    'display text-[clamp(3rem,6vw,4.5rem)] text-accent tabular-nums'
+    'block font-mono text-5xl font-medium tracking-tight text-ink tabular-nums'
   const parsed = parseMetric(value)
   return parsed ? (
     <CountUp

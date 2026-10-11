@@ -38,17 +38,6 @@ function describe(profile: Profile, experience: Experience[]): string[] {
   return sentences
 }
 
-/** Splits text into word spans so each can brighten as it scrolls into view. */
-function ScrubText({ text }: { text: string }) {
-  return (
-    <>
-      {text.split(' ').map((word, index) => (
-        <span key={`${word}-${index}`}>{word} </span>
-      ))}
-    </>
-  )
-}
-
 export function About({ profile, experience, education, interests }: AboutProps) {
   const current = getCurrentRole(experience)
   const previous = getPreviousRoles(experience)
@@ -94,24 +83,31 @@ export function About({ profile, experience, education, interests }: AboutProps)
   const facts = candidates.filter((fact): fact is Fact => Boolean(fact))
 
   return (
-    <div className="grid gap-14">
-      <div className="scrub-words max-w-3xl space-y-6 text-[clamp(1.5rem,3vw,2.25rem)] leading-[1.25] font-medium tracking-tight text-pretty">
-        {paragraphs.map((paragraph) => (
-          <p key={paragraph} className="scrub-words">
-            <ScrubText text={paragraph} />
+    <div className="grid gap-12 lg:grid-cols-12 lg:gap-8">
+      <Reveal className="space-y-5 lg:col-span-7">
+        {paragraphs.map((paragraph, index) => (
+          <p
+            key={paragraph}
+            className={
+              index === 0
+                ? 'text-[clamp(1.375rem,2.4vw,1.875rem)] leading-snug font-medium tracking-tight text-ink text-pretty'
+                : 'text-lg leading-relaxed text-muted text-pretty'
+            }
+          >
+            {paragraph}
           </p>
         ))}
-      </div>
+      </Reveal>
 
-      <dl className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
+      <dl className="grid gap-3 lg:col-span-5 lg:col-start-8">
         {facts.map((fact, index) => (
           <Reveal
             key={fact.term}
-            index={index}
-            className="rounded-3xl border border-line bg-elevated/60 p-6"
+            index={index + 1}
+            className="card grid gap-3 p-5 sm:grid-cols-[7rem_1fr] sm:gap-6"
           >
-            <dt className="font-mono text-xs text-faint">{fact.term}</dt>
-            <dd className="mt-3 text-[15px] leading-relaxed">{fact.detail}</dd>
+            <dt className="label pt-0.5 text-faint">{fact.term}</dt>
+            <dd className="text-[15px] leading-relaxed">{fact.detail}</dd>
           </Reveal>
         ))}
       </dl>

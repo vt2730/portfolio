@@ -4,43 +4,40 @@
 
 /* ---------------------------------------------------------------------------
    Colour system
-   Light: warm ivory canvas with deep indigo ink and a coral accent.
-   Dark: blue-tinted charcoal (not pure black) with off-white ink.
+   Dark (default): near-black with a faint blue cast, off-white ink and a
+   cyan accent. Light: neutral off-white with a deep teal accent that keeps
+   4.5:1 on white.
    Keep `--canvas` in sync with useTheme.ts and the inline script in index.html.
 --------------------------------------------------------------------------- */
 :root {
-  --canvas: #f3f1ec;
-  --surface: #e9e6df;
-  --elevated: #fbfaf7;
-  --ink: #1a1a2b;
-  --muted: #4c4b62;
-  --faint: #7b7a90;
-  --line: rgb(26 26 43 / 0.1);
-  --line-strong: rgb(26 26 43 / 0.22);
-  --accent: #d9481f;
-  --accent-soft: rgb(217 72 31 / 0.12);
-  --glow-a: rgb(217 72 31 / 0.28);
-  --glow-b: rgb(99 91 255 / 0.22);
-  --grain-opacity: 0.045;
-  --inverted-bg: #1a1a2b;
+  --canvas: #fafafa;
+  --surface: #f3f4f6;
+  --elevated: #ffffff;
+  --ink: #0b0f14;
+  --muted: #4b5563;
+  --faint: #6b7280;
+  --line: rgb(11 15 20 / 0.09);
+  --line-strong: rgb(11 15 20 / 0.22);
+  --accent: #0e7490;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(14 116 144 / 0.1);
+  --grid-line: rgb(11 15 20 / 0.06);
   color-scheme: light;
 }
 
 .dark {
-  --canvas: #15151d;
-  --surface: #1d1d27;
-  --elevated: #24242f;
-  --ink: #f2f1f7;
-  --muted: #b3b2c3;
-  --faint: #7e7d91;
-  --line: rgb(242 241 247 / 0.09);
-  --line-strong: rgb(242 241 247 / 0.2);
-  --accent: #ff7a59;
-  --accent-soft: rgb(255 122 89 / 0.14);
-  --glow-a: rgb(255 122 89 / 0.22);
-  --glow-b: rgb(124 111 255 / 0.28);
-  --grain-opacity: 0.07;
-  --inverted-bg: #f3f1ec;
+  --canvas: #0a0d12;
+  --surface: #0f131a;
+  --elevated: #141922;
+  --ink: #eef1f5;
+  --muted: #a3abb8;
+  --faint: #76818f;
+  --line: rgb(238 241 245 / 0.08);
+  --line-strong: rgb(238 241 245 / 0.2);
+  --accent: #22d3ee;
+  --accent-ink: #06151a;
+  --accent-soft: rgb(34 211 238 / 0.12);
+  --grid-line: rgb(238 241 245 / 0.05);
   color-scheme: dark;
 }
 
@@ -58,6 +55,7 @@
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -81,29 +79,12 @@
     font-feature-settings: 'ss01', 'cv11';
     text-rendering: optimizeLegibility;
     transition:
-      background-color 0.4s ease,
-      color 0.4s ease;
-  }
-
-  /* Film grain — a tiny inline SVG tiled over the page. Purely decorative. */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    pointer-events: none;
-    opacity: var(--grain-opacity);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 160px 160px;
-    mix-blend-mode: multiply;
-  }
-
-  .dark body::before {
-    mix-blend-mode: screen;
+      background-color 0.3s ease,
+      color 0.3s ease;
   }
 
   ::selection {
-    background: color-mix(in srgb, var(--accent) 30%, transparent);
+    background: color-mix(in srgb, var(--accent) 35%, transparent);
   }
 
   :focus-visible {
@@ -117,60 +98,53 @@
   /* Display type used for the hero and section titles. */
   .display {
     font-weight: 600;
-    letter-spacing: -0.045em;
-    line-height: 0.92;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
     text-wrap: balance;
   }
 
-  /* Rounded, tinted panel that gives sections a distinct surface. */
-  .panel {
-    background: var(--surface);
-    border-radius: 2rem;
+  /* Small-caps mono label used for eyebrows, meta and table headings. */
+  .label {
+    @apply font-mono text-[11px] tracking-[0.14em] uppercase;
   }
 
-  @media (min-width: 768px) {
-    .panel {
-      border-radius: 3rem;
-    }
+  /* Faint blueprint grid behind the hero and contact sections, fading out
+     towards the edges so it never competes with the content. */
+  .grid-bg {
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(
+      ellipse 80% 70% at 50% 40%,
+      #000 30%,
+      transparent 100%
+    );
   }
 
-  /* Flips the palette for a high-contrast block (the Contact section and
-     metric cards). The background comes from the parent-scoped token so the
-     overrides below don't affect it. */
-  .inverted {
-    background: var(--inverted-bg);
+  /* Bordered card surface shared by every section. */
+  .card {
+    @apply rounded-xl border border-line bg-surface;
+    transition:
+      border-color 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .card-hover:hover {
+    border-color: var(--line-strong);
+  }
+
+  /* Chip for stack and skill items. */
+  .chip {
+    @apply rounded-md border border-line bg-canvas px-2.5 py-1 font-mono text-xs text-muted;
+    transition:
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .chip:hover {
+    border-color: var(--accent);
     color: var(--ink);
-    --ink: #f3f1ec;
-    --canvas: #1a1a2b;
-    --surface: rgb(243 241 236 / 0.07);
-    --elevated: rgb(243 241 236 / 0.07);
-    --muted: rgb(243 241 236 / 0.72);
-    --faint: rgb(243 241 236 / 0.5);
-    --line: rgb(243 241 236 / 0.14);
-    --line-strong: rgb(243 241 236 / 0.32);
-    --accent: #ff7a59;
-    --accent-soft: rgb(255 122 89 / 0.14);
-  }
-
-  .dark .inverted {
-    --ink: #1a1a2b;
-    --canvas: #f3f1ec;
-    --surface: #e9e6df;
-    --elevated: #fbfaf7;
-    --muted: #4c4b62;
-    --faint: #7b7a90;
-    --line: rgb(26 26 43 / 0.1);
-    --line-strong: rgb(26 26 43 / 0.22);
-    --accent: #d9481f;
-    --accent-soft: rgb(217 72 31 / 0.12);
-  }
-
-  /* Soft coloured glow behind the hero, drawn with two radial gradients. */
-  .glow {
-    background:
-      radial-gradient(60% 55% at 18% 20%, var(--glow-a), transparent 70%),
-      radial-gradient(50% 50% at 85% 75%, var(--glow-b), transparent 70%);
-    filter: blur(40px);
   }
 }
 
@@ -183,16 +157,12 @@
   ------------------------------------------------------------------ */
   .js [data-reveal] {
     opacity: 0;
-    transform: translateY(1.5rem);
+    transform: translateY(12px);
     transition:
-      opacity 0.9s var(--ease-out-expo),
-      transform 0.9s var(--ease-out-expo);
+      opacity 0.5s var(--ease-out-quint),
+      transform 0.5s var(--ease-out-quint);
     transition-delay: var(--reveal-delay, 0ms);
     will-change: opacity, transform;
-  }
-
-  .js [data-reveal='scale'] {
-    transform: translateY(1rem) scale(0.97);
   }
 
   .js [data-reveal][data-visible] {
@@ -207,13 +177,13 @@
   .mask-line {
     display: block;
     overflow: hidden;
-    padding-bottom: 0.06em;
-    margin-bottom: -0.06em;
+    padding-bottom: 0.08em;
+    margin-bottom: -0.08em;
   }
 
   .js .mask-line > * {
     display: block;
-    animation: rise 0.8s var(--ease-out-expo) both;
+    animation: rise 0.7s var(--ease-out-expo) both;
     animation-delay: var(--rise-delay, 0ms);
   }
 
@@ -226,91 +196,19 @@
     }
   }
 
-  /* Wipes the word in from the left with a soft edge, so letters appear one
-     after another while the word stays a single text node (kerning intact).
-     The resting state is fully visible, so it is safe without animation. */
-  .js .wipe {
-    mask-image: linear-gradient(90deg, #000 0 40%, transparent 60%);
-    mask-size: 250% 100%;
-    mask-position: 0 0;
-    animation:
-      rise 0.8s var(--ease-out-expo) both,
-      wipe 1.2s var(--ease-out-quint) both;
-    animation-delay: var(--rise-delay, 0ms);
-  }
-
-  @keyframes wipe {
-    from {
-      mask-position: 100% 0;
-    }
-    to {
-      mask-position: 0 0;
-    }
-  }
-
-  /* The surname arrives solid, then the ink drains away to leave the outline. */
-  .js .text-outline {
-    animation:
-      rise 0.8s var(--ease-out-expo) both,
-      wipe 1.2s var(--ease-out-quint) both,
-      drain 1s ease-in-out both;
-    animation-delay:
-      var(--rise-delay, 0ms), var(--rise-delay, 0ms),
-      calc(var(--rise-delay, 0ms) + 900ms);
-  }
-
-  @keyframes drain {
-    from {
-      color: var(--ink);
-      -webkit-text-stroke-color: transparent;
-    }
-    to {
-      color: transparent;
-      -webkit-text-stroke-color: color-mix(
-        in srgb,
-        var(--ink) 65%,
-        transparent
-      );
-    }
-  }
-
   .js .fade-in {
-    animation: fade 0.8s var(--ease-out-quint) both;
+    animation: fade 0.6s var(--ease-out-quint) both;
     animation-delay: var(--fade-delay, 0ms);
   }
 
   @keyframes fade {
     from {
       opacity: 0;
-      transform: translateY(0.75rem);
+      transform: translateY(8px);
     }
     to {
       opacity: 1;
       transform: none;
-    }
-  }
-
-  /* ------------------------------------------------------------------
-     Scroll-scrubbed text: words brighten as they cross the viewport.
-     Uses CSS scroll-driven animations where supported; otherwise the
-     text is simply rendered at full strength.
-  ------------------------------------------------------------------ */
-  .scrub-words > span {
-    color: var(--ink);
-  }
-
-  @supports (animation-timeline: view()) {
-    .js .scrub-words > span {
-      color: color-mix(in srgb, var(--ink) 22%, transparent);
-      animation: brighten linear both;
-      animation-timeline: view();
-      animation-range: entry 35% cover 45%;
-    }
-  }
-
-  @keyframes brighten {
-    to {
-      color: var(--ink);
     }
   }
 
@@ -336,41 +234,6 @@
     }
   }
 
-  /* Hero glow drifts slightly with the scroll. */
-  @supports (animation-timeline: scroll()) {
-    .parallax-slow {
-      animation: drift linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 100vh;
-    }
-  }
-
-  @keyframes drift {
-    to {
-      transform: translateY(18vh);
-    }
-  }
-
-  /* Continuous marquee for the stack strip. */
-  .marquee {
-    animation: marquee 40s linear infinite;
-  }
-
-  .marquee:hover {
-    animation-play-state: paused;
-  }
-
-  @keyframes marquee {
-    to {
-      transform: translateX(-50%);
-    }
-  }
-
-  /* Slow rotation for the "scroll" badge. */
-  .spin-slow {
-    animation: spin 14s linear infinite;
-  }
-
   /* Counting numbers keep their final width (see CountUp). */
   .count-up {
     display: inline-block;
@@ -379,77 +242,12 @@
   }
 
   /* ------------------------------------------------------------------
-     Typewriter (see Typewriter.tsx). The ghost and the typed copy share
-     one grid cell, so the ghost holds the final size while the text
-     fills in. The typed copy stays hidden under `html.js` until the
-     script takes over, so prerendered HTML never flashes the full text.
-  ------------------------------------------------------------------ */
-  .typewriter {
-    display: inline-grid;
-  }
-
-  .typewriter-ghost,
-  .typewriter-text {
-    grid-area: 1 / 1;
-  }
-
-  .typewriter-ghost {
-    visibility: hidden;
-  }
-
-  .js [data-typewriter='idle'] .typewriter-text {
-    visibility: hidden;
-  }
-
-  /* The caret is absolutely positioned at its static position, so it
-     never adds width that could re-wrap the line. */
-  [data-typewriter='typing'] .typewriter-text::after {
-    content: '';
-    position: absolute;
-    width: 0.5ch;
-    height: 0.9em;
-    margin-left: 0.12em;
-    background: var(--accent);
-    animation: blink 1s steps(2, start) infinite;
-  }
-
-  @keyframes blink {
-    to {
-      visibility: hidden;
-    }
-  }
-
-  /* Cursor-following transforms (see usePointerMotion). The transition
-     smooths both the follow and the snap back when the pointer leaves. */
-  .magnetic,
-  .tilt {
-    transition: transform 0.6s var(--ease-out-expo);
-  }
-
-  .tilt {
-    transform-style: preserve-3d;
-  }
-
-  /* Hover lift for cards and buttons. */
-  .lift {
-    transition:
-      transform 0.5s var(--ease-out-expo),
-      box-shadow 0.5s var(--ease-out-expo),
-      border-color 0.3s ease,
-      background-color 0.3s ease;
-  }
-
-  .lift:hover {
-    transform: translateY(-4px);
-  }
-
-  /* ------------------------------------------------------------------
      Contribution heatmap. Cells are single paths per intensity level;
      `color` feeds both fill and stroke so each level is one token.
      Levels 1–4 fade in after the card reveals, low to high.
   ------------------------------------------------------------------ */
   .heatmap {
-    --heat-bg: var(--canvas);
+    --heat-bg: var(--surface);
   }
 
   .heatmap text {
@@ -486,55 +284,24 @@
 
   .js [data-reveal] .heat-fill {
     opacity: 0;
-    transition: opacity 0.7s var(--ease-out-quint);
-    transition-delay: calc(200ms + var(--heat-order, 0) * 120ms);
+    transition: opacity 0.6s var(--ease-out-quint);
+    transition-delay: calc(150ms + var(--heat-order, 0) * 100ms);
   }
 
   .js [data-reveal][data-visible] .heat-fill {
     opacity: 1;
   }
 
-  /* Outlined display text, used for the hero surname. */
-  .text-outline {
-    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--ink) 65%, transparent);
-    color: transparent;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .js [data-reveal],
     .js [data-reveal] .heat-fill,
     .js .mask-line > *,
-    .js .wipe,
-    .js .text-outline,
-    .magnetic,
-    .tilt,
     .js .fade-in,
-    .js .scrub-words > span,
-    .scroll-progress,
-    .parallax-slow,
-    .marquee,
-    .spin-slow,
-    .lift {
+    .scroll-progress {
       animation: none !important;
       transition: none !important;
       opacity: 1;
       transform: none;
-    }
-
-    .js .scrub-words > span {
-      color: var(--ink);
-    }
-
-    .js .wipe {
-      mask-image: none;
-    }
-
-    .js [data-typewriter] .typewriter-text {
-      visibility: visible;
-    }
-
-    [data-typewriter] .typewriter-text::after {
-      display: none;
     }
 
     .scroll-progress {

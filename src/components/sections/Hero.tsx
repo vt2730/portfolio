@@ -1,38 +1,25 @@
-import type { CSSProperties } from 'react'
-import { getCurrentRole, getPreviousRoles } from '../../lib/experience'
-import { formatList } from '../../lib/format'
+import type { CSSProperties, ReactNode } from 'react'
+import {
+  getCareerStart,
+  getCurrentRole,
+  getPreviousRoles,
+  yearsSince,
+} from '../../lib/experience'
+import { formatYearMonth } from '../../lib/format'
 import { findLink, resumeFileName } from '../../lib/links'
 import type { Experience, Profile } from '../../types/portfolio'
 import { ButtonLink } from '../ui/ButtonLink'
 import { Container } from '../ui/Container'
-import { Icon } from '../ui/Icon'
-import { Magnetic } from '../ui/Magnetic'
-import { TextLink } from '../ui/TextLink'
-import { Typewriter } from '../ui/Typewriter'
+import { Icon, type IconName } from '../ui/Icon'
 
 interface HeroProps {
   profile: Profile
   experience: Experience[]
 }
 
-function withPeriod(text: string): string {
-  return text.endsWith('.') ? text : `${text}.`
-}
-
-/**
- * Factual fallback until `profile.tagline` is provided. The eyebrow above
- * already shows the title and current company, so this line doesn't repeat it.
- */
-function describeCareer(experience: Experience[]): string | null {
-  const current = getCurrentRole(experience)
-  const [previous] = getPreviousRoles(experience)
-
-  const parts: string[] = []
-  if (current) {
-    parts.push(`Working with ${formatList(current.stack.slice(0, 4))}.`)
-  }
-  if (previous) parts.push(`Previously at ${withPeriod(previous.company)}`)
-  return parts.length > 0 ? parts.join(' ') : null
+interface MetaItem {
+  term: string
+  detail: string
 }
 
 function delay(ms: number): CSSProperties {
@@ -42,143 +29,162 @@ function delay(ms: number): CSSProperties {
   } as CSSProperties
 }
 
+/** `[a, b, c]` → `a, b and c`, with each item emphasised. */
+function joinEmphasised(items: string[]): ReactNode {
+  return items.map((item, index) => (
+    <span key={item}>
+      {index > 0 && (index === items.length - 1 ? ' and ' : ', ')}
+      <strong className="font-medium text-ink">{item}</strong>
+    </span>
+  ))
+}
+
 export function Hero({ profile, experience }: HeroProps) {
   const current = getCurrentRole(experience)
-  const lead = profile.tagline ?? describeCareer(experience)
-  const socialLinks = [
-    findLink(profile.links, 'github'),
-    findLink(profile.links, 'linkedin'),
-  ].filter((link) => link !== undefined)
+  const [previous] = getPreviousRoles(experience)
+  const careerStart = getCareerStart(experience)
+  const stack = current?.stack.slice(0, 4) ?? []
   const words = profile.name.split(' ')
-  const eyebrow = current
-    ? `${profile.title} / ${current.company}`
-    : profile.title
+
+  const socialLinks = (['github', 'linkedin'] as const)
+    .map((kind) => findLink(profile.links, kind))
+    .filter((link) => link !== undefined)
+
+  // Every cell maps to a resume fact; years are derived from the role dates.
+  const meta: MetaItem[] = [
+    { term: 'Role', detail: profile.title },
+    ...(careerStart
+      ? [
+          {
+            term: 'Experience',
+            detail: `${yearsSince(careerStart)}+ years · since ${formatYearMonth(careerStart)}`,
+          },
+        ]
+      : []),
+    ...(current ? [{ term: 'Currently', detail: current.company }] : []),
+    ...(stack.length > 0 ? [{ term: 'Stack', detail: stack.join(' · ') }] : []),
+  ]
 
   return (
     <section
       id="top"
       aria-labelledby="hero-heading"
-      className="relative isolate flex min-h-svh flex-col justify-end overflow-hidden pt-32 pb-10 sm:pb-14"
+      className="relative isolate flex min-h-svh flex-col justify-center pt-28 pb-12 md:pt-32"
     >
-      {/* Colour wash behind the hero. */}
       <div
         aria-hidden="true"
-        className="glow parallax-slow pointer-events-none absolute inset-0 -z-10"
+        className="grid-bg pointer-events-none absolute inset-0 -z-10"
       />
 
       <Container>
-        <p className="flex items-center gap-2.5 font-mono text-xs tracking-wide text-muted uppercase sm:text-[13px]">
-          <span className="fade-in relative flex size-2" style={delay(100)}>
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 animate-ping rounded-full bg-accent opacity-60 motion-reduce:hidden"
-            />
-            <span
-              aria-hidden="true"
-              className="relative size-2 rounded-full bg-accent"
-            />
-          </span>
-          {/* Typed out like a prompt; the caret shows for a beat first. */}
-          <Typewriter
-            text={eyebrow}
-            label={
-              current ? `${profile.title} at ${current.company}` : profile.title
-            }
-            delay={350}
-          />
-        </p>
+        {current && (
+          <p
+            className="label fade-in inline-flex items-center gap-2.5 rounded-full border border-line bg-surface/80 py-1.5 pr-3.5 pl-3 text-muted"
+            style={delay(0)}
+          >
+            <span className="relative flex size-2">
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 animate-ping rounded-full bg-accent opacity-60 motion-reduce:hidden"
+              />
+              <span
+                aria-hidden="true"
+                className="relative size-2 rounded-full bg-accent"
+              />
+            </span>
+            {profile.title} at {current.company}
+          </p>
+        )}
 
         <h1
           id="hero-heading"
-          className="display mt-8 text-[clamp(3.5rem,13vw,11rem)] uppercase"
+          className="display mt-8 text-[clamp(3rem,8vw,6.5rem)]"
         >
           <span className="sr-only">{profile.name}</span>
-          {/* Each word rises from a mask and is wiped in left to right. The
-              word stays one text node so the font's kerning is untouched. */}
-          {words.map((word, index) => (
-            <span
-              key={`${word}-${index}`}
-              aria-hidden="true"
-              className="mask-line"
-            >
-              <span
-                style={delay(index * 120)}
-                className={`wipe ${index === words.length - 1 ? 'text-outline' : ''}`}
-              >
-                {word}
+          {/* Each word rises from a mask; the words stay on one line where
+              they fit so the name reads as a wordmark. */}
+          <span aria-hidden="true" className="flex flex-wrap gap-x-[0.25em]">
+            {words.map((word, index) => (
+              <span key={`${word}-${index}`} className="mask-line">
+                <span style={delay(100 + index * 90)}>{word}</span>
               </span>
-            </span>
-          ))}
+            ))}
+          </span>
         </h1>
 
-        <div className="mt-12 grid gap-10 border-t border-line pt-8 md:mt-16 lg:grid-cols-12 lg:items-end lg:gap-8">
-          {lead && (
-            <p
-              className="fade-in max-w-xl text-lg leading-relaxed text-muted text-pretty md:text-xl lg:col-span-6"
-              style={delay(400)}
-            >
-              {lead}
-            </p>
+        <p
+          className="fade-in mt-6 max-w-2xl text-xl leading-snug text-muted text-pretty md:text-2xl"
+          style={delay(350)}
+        >
+          {profile.tagline ?? (
+            <>
+              {profile.title}
+              {stack.length > 0 && <> working with {joinEmphasised(stack)}</>}.
+              {previous && (
+                <>
+                  {' '}
+                  Previously at{' '}
+                  <strong className="font-medium text-ink">
+                    {previous.company}
+                  </strong>
+                  {previous.company.endsWith('.') ? '' : '.'}
+                </>
+              )}
+            </>
           )}
+        </p>
 
-          <div
-            className="fade-in flex flex-col gap-6 lg:col-span-6 lg:items-end"
-            style={delay(500)}
+        <div
+          className="fade-in mt-10 flex flex-wrap items-center gap-3"
+          style={delay(450)}
+        >
+          <ButtonLink href="#projects" variant="accent">
+            View projects
+            <Icon name="arrow-down" className="size-4" />
+          </ButtonLink>
+          <ButtonLink
+            href={profile.resumeUrl}
+            download={resumeFileName(profile.name)}
+            variant="secondary"
           >
-            <div className="flex flex-wrap gap-3">
-              <Magnetic>
-                <ButtonLink href="#contact" variant="accent">
-                  Get in touch
-                </ButtonLink>
-              </Magnetic>
-              <Magnetic>
-                <ButtonLink
-                  href={profile.resumeUrl}
-                  download={resumeFileName(profile.name)}
-                  variant="secondary"
-                >
-                  <Icon name="download" className="size-4" />
-                  Download résumé
-                </ButtonLink>
-              </Magnetic>
-            </div>
-            {socialLinks.length > 0 && (
-              <ul className="flex gap-6 text-[15px]">
-                {socialLinks.map((link) => (
-                  <li key={link.kind}>
-                    <TextLink href={link.href} external>
-                      {link.label}
-                    </TextLink>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+            <Icon name="download" className="size-4" />
+            Download résumé
+          </ButtonLink>
+          {socialLinks.length > 0 && (
+            <ul className="flex gap-2 sm:ml-2">
+              {socialLinks.map((link) => (
+                <li key={link.kind}>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${link.label} (opens in a new tab)`}
+                    className="inline-flex size-11 items-center justify-center rounded-full border border-line bg-surface text-muted transition-colors duration-200 hover:border-line-strong hover:text-ink"
+                  >
+                    <Icon name={link.kind as IconName} className="size-[18px]" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        <a
-          href="#about"
-          aria-label="Scroll to the About section"
-          className="fade-in absolute right-5 bottom-10 hidden size-24 place-items-center rounded-full text-faint transition-colors duration-200 hover:text-ink sm:right-8 lg:right-12 lg:grid"
-          style={delay(1100)}
+        <dl
+          className="fade-in mt-16 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-line pt-6 md:mt-24 md:grid-cols-4"
+          style={delay(600)}
         >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 100 100"
-            className="spin-slow absolute inset-0 size-full fill-current font-mono text-[10.5px] tracking-[0.3em] uppercase"
-          >
-            <defs>
-              <path
-                id="ring"
-                d="M50 50 m-38 0 a38 38 0 1 1 76 0 a38 38 0 1 1 -76 0"
-              />
-            </defs>
-            <text>
-              <textPath href="#ring">scroll down · scroll down ·</textPath>
-            </text>
-          </svg>
-          <Icon name="arrow-up" className="size-4 rotate-180" />
-        </a>
+          {meta.map((item) => (
+            <div key={item.term}>
+              <dt className="label text-faint">{item.term}</dt>
+              <dd
+                className="mt-2 text-sm leading-relaxed text-ink"
+                suppressHydrationWarning
+              >
+                {item.detail}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </Container>
     </section>
   )

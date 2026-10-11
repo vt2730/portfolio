@@ -11,16 +11,16 @@ interface ButtonLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
 }
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-ink text-canvas hover:bg-accent hover:text-white',
+  primary: 'bg-ink text-canvas hover:bg-accent hover:text-accent-ink',
   secondary:
-    'border border-line-strong bg-transparent text-ink hover:border-ink hover:bg-elevated',
-  accent: 'bg-accent text-white hover:bg-ink hover:text-canvas',
+    'border border-line bg-surface text-ink hover:border-line-strong hover:bg-elevated',
+  accent: 'bg-accent text-accent-ink hover:bg-ink hover:text-canvas',
 }
 
 const sizes: Record<Size, string> = {
   sm: 'h-9 px-4 text-sm',
-  md: 'h-12 px-6 text-[15px]',
-  lg: 'h-14 px-8 text-base',
+  md: 'h-11 px-5 text-[15px]',
+  lg: 'h-12 px-6 text-base',
 }
 
 export function ButtonLink({
@@ -34,7 +34,7 @@ export function ButtonLink({
   return (
     <a
       href={href}
-      className={`lift inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap transition-colors duration-200 ${variants[variant]} ${sizes[size]} ${className}`}
       {...rest}
     >
       {children}

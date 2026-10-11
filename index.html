@@ -9,7 +9,7 @@
       content="Vikash Tiwary is a front-end developer working with React, TypeScript, Next.js and GraphQL. Experience, projects and contact details."
     />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#f3f1ec" />
+    <meta name="theme-color" content="#0a0d12" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href="https://vt2730.github.io/portfolio/" />
 
@@ -31,19 +31,17 @@
 
     <script>
       // Apply the theme before first paint to avoid a flash of the wrong theme.
+      // Dark is the default; light is opt-in via the toggle.
       ;(function () {
         try {
-          var stored = localStorage.getItem('theme')
-          var dark = stored
-            ? stored === 'dark'
-            : matchMedia('(prefers-color-scheme: dark)').matches
+          var dark = localStorage.getItem('theme') !== 'light'
           document.documentElement.classList.toggle('dark', dark)
           // Marks that scripts run, so scroll reveals can start hidden.
           document.documentElement.classList.add('js')
-          if (dark) {
+          if (!dark) {
             document
               .querySelector('meta[name="theme-color"]')
-              .setAttribute('content', '#15151d')
+              .setAttribute('content', '#fafafa')
           }
         } catch (e) {}
       })()
