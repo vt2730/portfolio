@@ -24,71 +24,52 @@ export function Highlights({
   experience,
 }: HighlightsProps) {
   const companyById = new Map(experience.map((role) => [role.id, role.company]))
-  const groups = (Object.keys(themes) as HighlightTheme[])
-    .map((theme) => ({
-      theme,
-      label: themes[theme],
-      items: highlights.filter((highlight) => highlight.theme === theme),
-    }))
-    .filter((group) => group.items.length > 0)
+  // Grouped by theme, in the order the themes are listed.
+  const ordered = (Object.keys(themes) as HighlightTheme[]).flatMap((theme) =>
+    highlights.filter((highlight) => highlight.theme === theme),
+  )
 
   return (
-    <div className="space-y-12">
-      {groups.map((group) => (
-        <div key={group.theme}>
-          <Reveal
-            as="h3"
-            className="label flex items-center gap-3 text-muted"
+    <ul className="rows">
+      {ordered.map((highlight, index) => (
+        <Reveal key={highlight.id} as="li" index={index % 3}>
+          <article
+            aria-labelledby={`${highlight.id}-title`}
+            className="row grid-12 items-baseline gap-y-3 py-[clamp(1.4rem,2.4vw,2rem)]"
           >
-            <span
-              aria-hidden="true"
-              className="size-1.5 rounded-full bg-accent"
-            />
-            {group.label}
-          </Reveal>
-          <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {group.items.map((highlight, index) => (
-              <Reveal
-                key={highlight.id}
-                as="li"
-                index={index}
-                className="group card card-hover flex flex-col p-6"
-              >
-                {highlight.metric && (
-                  <p className="mb-5">
-                    <MetricValue value={highlight.metric.value} />
-                    <span className="mt-1 block text-sm text-muted">
-                      {highlight.metric.label}
-                    </span>
-                  </p>
-                )}
-                <h4 className="text-[17px] font-semibold tracking-tight">
-                  {highlight.title}
-                </h4>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted">
-                  {highlight.description}
-                </p>
-                <p className="mt-auto pt-6">
-                  <span
-                    aria-hidden="true"
-                    className="relative mb-3 block h-px w-full bg-line before:absolute before:top-0 before:left-0 before:h-px before:w-6 before:bg-accent before:transition-[width] before:duration-700 before:ease-out-expo group-hover:before:w-full motion-reduce:before:transition-none"
-                  />
-                  <span className="label text-faint">
-                    {companyById.get(highlight.experienceId)}
+            <p className="note col-span-full md:col-span-2">
+              {themes[highlight.theme]}
+            </p>
+
+            <div className="col-span-full md:col-[3/span_7]">
+              <h3 id={`${highlight.id}-title`} className="row-title h3">
+                {highlight.title}
+              </h3>
+              <p className="mt-3 max-w-[58ch] text-muted">
+                {highlight.description}
+              </p>
+            </div>
+
+            <div className="col-span-full flex flex-wrap items-baseline gap-x-3 gap-y-1 md:col-[10/-1] md:flex-col md:items-end md:text-right">
+              {highlight.metric && (
+                <p className="text-accent-text">
+                  <MetricValue value={highlight.metric.value} />
+                  <span className="note mt-1 block text-accent-text">
+                    {highlight.metric.label}
                   </span>
                 </p>
-              </Reveal>
-            ))}
-          </ul>
-        </div>
+              )}
+              <p className="note">{companyById.get(highlight.experienceId)}</p>
+            </div>
+          </article>
+        </Reveal>
       ))}
-    </div>
+    </ul>
   )
 }
 
 function MetricValue({ value }: { value: string }) {
-  const className =
-    'block font-mono text-5xl font-medium tracking-tight text-ink tabular-nums'
+  const className = 'h3 block tabular-nums'
   const parsed = parseMetric(value)
   return parsed ? (
     <CountUp

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Icon } from './Icon'
 
 interface CopyButtonProps {
   value: string
@@ -27,13 +26,9 @@ export function CopyButton({ value, label }: CopyButtonProps) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={copy}
-      className="inline-flex h-9 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-medium text-muted transition-colors duration-150 hover:border-ink/40 hover:text-ink"
-    >
-      <Icon name={copied ? 'check' : 'copy'} className="size-4" />
+    <button type="button" onClick={copy} className="btn btn--ghost">
       <span aria-live="polite">{copied ? 'Copied' : label}</span>
+      <span aria-hidden="true">{copied ? '✓' : '⧉'}</span>
     </button>
   )
 }

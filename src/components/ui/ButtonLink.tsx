@@ -1,43 +1,56 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'accent'
-type Size = 'sm' | 'md' | 'lg'
+type Variant = 'solid' | 'ghost'
+type Size = 'md' | 'sm'
+export type ArrowDirection = 'right' | 'out' | 'down' | 'up'
 
 interface ButtonLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string
   children: ReactNode
   variant?: Variant
   size?: Size
+  /** Trailing arrow; it leans the way it points on hover. */
+  arrow?: ArrowDirection
 }
 
-const variants: Record<Variant, string> = {
-  primary: 'bg-ink text-canvas hover:bg-accent hover:text-accent-ink',
-  secondary:
-    'border border-line bg-surface text-ink hover:border-line-strong hover:bg-elevated',
-  accent: 'bg-accent text-accent-ink hover:bg-ink hover:text-canvas',
+const ARROWS: Record<ArrowDirection, { glyph: string; className: string }> = {
+  right: { glyph: '→', className: 'arrow' },
+  out: { glyph: '↗', className: 'arrow arrow--out' },
+  down: { glyph: '↓', className: 'arrow arrow--down' },
+  up: { glyph: '↑', className: 'arrow arrow--up' },
 }
 
-const sizes: Record<Size, string> = {
-  sm: 'h-9 px-4 text-sm',
-  md: 'h-11 px-5 text-[15px]',
-  lg: 'h-12 px-6 text-base',
+export function Arrow({ direction }: { direction: ArrowDirection }) {
+  const { glyph, className } = ARROWS[direction]
+  return (
+    <span aria-hidden="true" className={className}>
+      {glyph}
+    </span>
+  )
 }
 
 export function ButtonLink({
   href,
   children,
-  variant = 'primary',
+  variant = 'solid',
   size = 'md',
+  arrow,
   className = '',
   ...rest
 }: ButtonLinkProps) {
+  const classes = [
+    'btn',
+    variant === 'ghost' && 'btn--ghost',
+    size === 'sm' && 'btn--sm',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <a
-      href={href}
-      className={`group inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap transition-colors duration-200 ${variants[variant]} ${sizes[size]} ${className}`}
-      {...rest}
-    >
+    <a href={href} className={classes} {...rest}>
       {children}
+      {arrow && <Arrow direction={arrow} />}
     </a>
   )
 }

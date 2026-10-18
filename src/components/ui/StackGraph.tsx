@@ -155,13 +155,14 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
     <figure
       aria-label={label}
       aria-describedby={captionId}
-      className={`rounded-lg border border-line bg-canvas ${className}`}
+      className={`flex min-w-0 flex-1 flex-col gap-6 ${className}`}
     >
-      <div className="overflow-x-auto">
+      {/* Centred while it fits; scrolls sideways (from the left) when not. */}
+      <div className="flex flex-1 items-center overflow-x-auto">
         {/* `data-inview` boots the map column by column (see index.css). */}
         <div
           data-inview=""
-          className="stack-graph relative m-4"
+          className="stack-graph relative mx-auto my-2"
           style={{ width, height, '--cols': layers.length } as CSSProperties}
           onPointerLeave={() => setHovered(null)}
           onKeyDown={(event) => {
@@ -172,7 +173,7 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
             <span
               key={layer}
               aria-hidden="true"
-              className="stack-label label absolute top-0 text-faint"
+              className="stack-label note absolute top-0"
               style={
                 {
                   left: col * COL + (COL - NODE_W) / 2,
@@ -200,7 +201,7 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
                   d={edge.path}
                   fill="none"
                   strokeWidth={on ? 1.5 : 1}
-                  className={`transition-[stroke,opacity] duration-200 motion-reduce:transition-none ${
+                  className={`transition-[stroke,opacity] duration-200 ${
                     on
                       ? 'stack-flow stroke-accent'
                       : focus
@@ -222,6 +223,7 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
                 key={node.name}
                 type="button"
                 aria-pressed={pinned === node.name}
+                data-cursor={pinned === node.name ? 'release' : 'trace'}
                 onPointerEnter={() => setHovered(node.name)}
                 onFocus={() => setHovered(node.name)}
                 onBlur={() => setHovered(null)}
@@ -240,19 +242,19 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
                     '--row': node.row,
                   } as CSSProperties
                 }
-                className={`stack-node absolute inline-flex cursor-pointer items-center justify-center rounded-md border bg-surface px-5 font-mono text-xs transition-[border-color,opacity,color] duration-200 motion-reduce:transition-none ${
+                className={`stack-node absolute inline-flex cursor-pointer items-center justify-center rounded-[3px] border bg-paper px-5 font-mono text-xs transition-[border-color,opacity,color] duration-200 ${
                   isFocus
                     ? 'border-accent text-ink'
                     : isConnected
-                      ? 'border-line-strong text-ink'
-                      : 'border-line text-muted hover:border-line-strong hover:text-ink'
+                      ? 'border-ink/60 text-ink'
+                      : 'border-line-strong text-muted hover:border-ink/60 hover:text-ink'
                 } ${dimmed ? 'opacity-40' : ''}`}
               >
                 {/* Status dot sits in the padding so the label never shifts. */}
                 {(isFocus || isConnected) && (
                   <span
                     aria-hidden="true"
-                    className={`absolute left-2.5 size-1.5 rounded-full transition-transform duration-300 ease-out-expo starting:scale-0 motion-reduce:transition-none ${
+                    className={`absolute left-2.5 size-1.5 rounded-full transition-transform duration-300 ease-out starting:scale-0 ${
                       isFocus ? 'bg-accent' : 'bg-line-strong'
                     }`}
                   />
@@ -266,7 +268,7 @@ export function StackGraph({ items, label, className = '' }: StackGraphProps) {
       <figcaption
         id={captionId}
         aria-live="polite"
-        className="label border-t border-line px-4 py-2.5 text-faint"
+        className="note"
       >
         {caption}
       </figcaption>

@@ -1,7 +1,9 @@
-import type { ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { CommandPalette } from './components/layout/CommandPalette'
 import { Footer } from './components/layout/Footer'
 import { Navbar } from './components/layout/Navbar'
-import { Section, type SectionTone } from './components/layout/Section'
+import { Preloader } from './components/layout/Preloader'
+import { Section } from './components/layout/Section'
 import { SkipLink } from './components/layout/SkipLink'
 import { About } from './components/sections/About'
 import { Contact } from './components/sections/Contact'
@@ -11,8 +13,14 @@ import { Hero } from './components/sections/Hero'
 import { Highlights } from './components/sections/Highlights'
 import { Projects } from './components/sections/Projects'
 import { Skills } from './components/sections/Skills'
+import { Cursor } from './components/ui/Cursor'
 import { portfolio } from './data/portfolio'
+import { useHotkeys } from './hooks/useHotkeys'
 import { useReveal } from './hooks/useReveal'
+import { buildCommands } from './lib/commands'
+import { formatYearMonth } from './lib/format'
+import { getCareerStart } from './lib/experience'
+import { syncChrome } from './lib/preferences'
 import type { SectionId } from './types/portfolio'
 
 const {
@@ -28,16 +36,21 @@ const {
   github,
 } = portfolio
 
+const careerStart = getCareerStart(experience)
+const contributions = github.years.reduce((sum, year) => sum + year.total, 0)
+const themeCount = new Set(highlights.map((highlight) => highlight.theme)).size
+const toolCount = new Set(skills.flatMap((group) => group.items)).size
+
 interface SectionConfig {
-  lead?: string
-  tone?: SectionTone
+  /** Mono annotation on the right of the section's rule. */
+  note?: string
   content: ReactNode
 }
 
 // Section order and titles come from `portfolio.navigation`.
 const sections: Record<SectionId, SectionConfig> = {
   about: {
-    lead: 'A quick read on where I am and where I have been.',
+    note: careerStart ? `Front-end since ${formatYearMonth(careerStart)}` : undefined,
     content: (
       <About
         profile={profile}
@@ -47,20 +60,16 @@ const sections: Record<SectionId, SectionConfig> = {
       />
     ),
   },
-  skills: {
-    lead: 'The tools I reach for, grouped by what they are for.',
-    content: <Skills groups={skills} />,
-  },
   experience: {
-    lead: 'Roles, what I shipped, and the stack behind each one.',
+    note: `${experience.length} roles · full time`,
     content: <ExperienceTimeline roles={experience} />,
   },
   projects: {
-    lead: 'Side projects built end to end, from schema to UI.',
+    note: 'Built end to end · source on GitHub',
     content: <Projects projects={projects} />,
   },
   highlights: {
-    lead: 'The work I am most proud of, grouped by theme.',
+    note: `${highlights.length} highlights · ${themeCount} themes`,
     content: (
       <Highlights
         highlights={highlights}
@@ -69,43 +78,75 @@ const sections: Record<SectionId, SectionConfig> = {
       />
     ),
   },
+  skills: {
+    note: `${toolCount} tools · ${skills.length} groups`,
+    content: <Skills groups={skills} />,
+  },
   github: {
-    lead: 'Four years of commits, pull requests and reviews, traced from my contribution graph.',
+    note: 'Traced from my contribution graph',
     content: <GitHubActivity activity={github} profile={profile} />,
   },
   contact: {
-    lead: 'Open to conversations about front-end roles and interesting problems.',
-    tone: 'grid',
+    note: 'Email is quickest',
     content: <Contact profile={profile} />,
   },
 }
 
 export default function App() {
   useReveal()
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const togglePalette = useCallback(() => setPaletteOpen((open) => !open), [])
+  const commands = useMemo(() => buildCommands(profile, navigation), [])
+  useHotkeys(togglePalette)
+
+  // Match the favicon and theme-color to the stored theme and accent.
+  useEffect(syncChrome, [])
 
   return (
     <>
+      <Preloader name={profile.name} title={profile.title} />
       <SkipLink />
-      <Navbar profile={profile} items={navigation} />
-      <main id="main" tabIndex={-1} className="outline-none">
+      <Navbar
+        profile={profile}
+        items={navigation}
+        onOpenPalette={() => setPaletteOpen(true)}
+      />
+      <main id="main" tabIndex={-1}>
         <Hero profile={profile} experience={experience} />
         {navigation.map((item, index) => {
-          const { lead, tone, content } = sections[item.id]
+          const { note, content } = sections[item.id]
           return (
             <Section
               key={item.id}
               id={item.id}
               index={index + 1}
               title={item.label}
-              lead={lead}
-              tone={tone}
+              note={note}
             >
               {content}
             </Section>
           )
         })}
       </main>
-      <Footer name={profile.name} />
+      <Footer
+        profile={profile}
+        items={navigation}
+        experience={experience}
+        contributions={contributions}
+      />
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        commands={commands}
+      />
+      <div aria-hidden="true" className="grid-overlay">
+        <div className="grid-12">
+          {Array.from({ length: 12 }, (_, index) => (
+            <span key={index} />
+          ))}
+        </div>
+      </div>
+      <Cursor />
     </>
   )
 }

@@ -1,14 +1,14 @@
+import { useAccent } from '../../hooks/useAccent'
 import { useTheme } from '../../hooks/useTheme'
-import { Icon } from './Icon'
+import { cycleAccent } from '../../lib/preferences'
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme()
   const label =
     theme === null
-      ? 'Toggle theme'
+      ? 'Toggle light / dark theme'
       : `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`
 
-  // Icons switch via the `dark` class so they are correct before hydration.
   return (
     <button
       type="button"
@@ -20,10 +20,36 @@ export function ThemeToggle() {
       }}
       aria-label={label}
       title={label}
-      className="inline-flex size-9 items-center justify-center rounded-full text-muted transition-colors duration-150 hover:bg-surface hover:text-ink"
+      className="tool"
     >
-      <Icon name="moon" className="size-[18px] dark:hidden" />
-      <Icon name="sun" className="hidden size-[18px] dark:block" />
+      <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+        <circle
+          cx="10"
+          cy="10"
+          r="7.25"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+        <path d="M10 2.75a7.25 7.25 0 0 1 0 14.5z" fill="currentColor" />
+      </svg>
+    </button>
+  )
+}
+
+export function AccentToggle() {
+  const accent = useAccent()
+  const label = accent ? `Change accent colour (now ${accent})` : 'Change accent colour'
+
+  return (
+    <button
+      type="button"
+      onClick={cycleAccent}
+      aria-label={label}
+      title={label}
+      className="tool"
+    >
+      <span aria-hidden="true" className="swatch" />
     </button>
   )
 }

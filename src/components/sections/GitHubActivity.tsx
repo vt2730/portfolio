@@ -6,7 +6,7 @@ import {
   STEP,
   layoutYear,
 } from '../../lib/contributions'
-import { formatDate } from '../../lib/format'
+import { formatDate, formatNumber } from '../../lib/format'
 import { findLink } from '../../lib/links'
 import type {
   ContributionMix,
@@ -14,8 +14,8 @@ import type {
   GitHubActivity as GitHubActivityData,
   Profile,
 } from '../../types/portfolio'
+import { Arrow } from '../ui/ButtonLink'
 import { CountUp } from '../ui/CountUp'
-import { Icon } from '../ui/Icon'
 import { Reveal } from '../ui/Reveal'
 
 interface GitHubActivityProps {
@@ -46,51 +46,51 @@ export function GitHubActivity({ activity, profile }: GitHubActivityProps) {
   const githubLink = findLink(profile.links, 'github')
 
   return (
-    <div className="grid gap-10">
-      <Reveal className="grid gap-8 sm:grid-cols-[auto_1fr] sm:items-end">
-        <p>
-          <CountUp
-            value={total}
-            className="block font-mono text-[clamp(3rem,7vw,5rem)] font-medium tracking-tight text-ink tabular-nums"
-          />
-          <span className="mt-2 block text-[15px] text-muted">
-            contributions on GitHub since {first}
-          </span>
-        </p>
-        <dl className="grid grid-cols-2 gap-6 border-t border-line pt-6 font-mono text-xs sm:border-t-0 sm:border-l sm:pt-0 sm:pl-8">
+    <div>
+      {/* Summary as a drawing's title block. */}
+      <Reveal className="tb note">
+        <dl className="tb__cells">
           <div>
-            <dt className="label text-faint">Busiest year</dt>
-            <dd className="mt-1.5 text-sm text-ink tabular-nums">
-              {busiest.year} · <CountUp value={busiest.total} />
+            <dt>Contributions</dt>
+            <dd className="tb__val">
+              <CountUp value={total} />
             </dd>
           </div>
           <div>
-            <dt className="label text-faint">Snapshot</dt>
-            <dd className="mt-1.5 text-sm text-ink">
-              {formatDate(capturedOn)}
-            </dd>
+            <dt>Busiest year · {formatNumber(busiest.total)}</dt>
+            <dd className="tb__val">{busiest.year}</dd>
+          </div>
+          <div>
+            <dt>Since</dt>
+            <dd className="tb__val">{first}</dd>
           </div>
         </dl>
+        <p className="tb__cap">
+          <span>Snapshot · {formatDate(capturedOn)}</span>
+          {githubLink && (
+            <a
+              href={githubLink.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group note--accent"
+            >
+              GitHub <Arrow direction="out" />
+              <span className="sr-only">(opens in a new tab)</span>
+            </a>
+          )}
+        </p>
       </Reveal>
 
-      <ol className="grid gap-4">
+      <ol className="rows mt-[clamp(3rem,6vw,5rem)]">
         {years.map((year, index) => (
-          <Reveal
-            key={year.year}
-            as="li"
-            index={index}
-            className="card p-5 sm:p-6"
-          >
-            <YearCard year={year} capturedOn={capturedOn} />
+          <Reveal key={year.year} as="li" index={index % 2}>
+            <YearRow year={year} capturedOn={capturedOn} />
           </Reveal>
         ))}
       </ol>
 
-      <Reveal className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
-        <p
-          aria-hidden="true"
-          className="flex items-center gap-1.5 font-mono text-xs text-faint"
-        >
+      <Reveal className="mt-6 flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
+        <p aria-hidden="true" className="note flex items-center gap-1.5">
           Less
           {LEVELS.map((level) => (
             <span
@@ -105,10 +105,9 @@ export function GitHubActivity({ activity, profile }: GitHubActivityProps) {
             href={githubLink.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center gap-1 text-[15px] font-medium text-muted underline decoration-line underline-offset-[5px] transition-colors duration-200 hover:text-ink hover:decoration-accent"
+            className="group link font-medium"
           >
-            Follow along on GitHub
-            <Icon name="arrow-up-right" className="nudge-out size-3.5" />
+            Follow along on GitHub <Arrow direction="out" />
             <span className="sr-only">(opens in a new tab)</span>
           </a>
         )}
@@ -117,33 +116,34 @@ export function GitHubActivity({ activity, profile }: GitHubActivityProps) {
   )
 }
 
-interface YearCardProps {
+interface YearRowProps {
   year: ContributionYear
   capturedOn: string
 }
 
-function YearCard({ year, capturedOn }: YearCardProps) {
+function YearRow({ year, capturedOn }: YearRowProps) {
   const layout = layoutYear(year, capturedOn)
   const headingId = `github-${year.year}`
   const mix = MIX.filter((entry) => year.mix[entry.key] > 0)
 
   return (
-    <article aria-labelledby={headingId} className="grid gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
-        <div className="flex items-baseline gap-4">
-          <h3 id={headingId} className="label text-faint">
-            {year.year}
-          </h3>
-          <p className="font-mono text-[2rem] font-medium tracking-tight tabular-nums">
-            <CountUp value={year.total} duration={1200} />
-            <span className="sr-only"> contributions</span>
-          </p>
-        </div>
+    <article
+      aria-labelledby={headingId}
+      className="grid-12 gap-y-6 py-[clamp(1.5rem,3vw,2.5rem)]"
+    >
+      <header className="col-span-full lg:col-span-3">
+        <h3 id={headingId} className="note">
+          {year.year}
+        </h3>
+        <p className="h3 mt-2 tabular-nums">
+          <CountUp value={year.total} duration={1200} />
+          <span className="sr-only"> contributions</span>
+        </p>
 
-        <div className="w-full max-w-sm sm:w-80">
+        <div className="mt-5 max-w-sm">
           <div
             aria-hidden="true"
-            className="mix-bar flex h-1.5 gap-0.5 overflow-hidden rounded-full"
+            className="mix-bar flex h-1 gap-0.5 overflow-hidden"
           >
             {mix.map((entry) => (
               <span
@@ -153,10 +153,10 @@ function YearCard({ year, capturedOn }: YearCardProps) {
               />
             ))}
           </div>
-          <dl className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs">
+          <dl className="note mt-2.5 flex flex-wrap gap-x-4 gap-y-1">
             {mix.map((entry) => (
               <div key={entry.key} className="flex items-center gap-1.5">
-                <dt className="flex items-center gap-1.5 text-faint">
+                <dt className="flex items-center gap-1.5">
                   <span
                     aria-hidden="true"
                     className={`${entry.tone} size-1.5 rounded-full`}
@@ -172,7 +172,7 @@ function YearCard({ year, capturedOn }: YearCardProps) {
         </div>
       </header>
 
-      <div className="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
+      <div className="col-span-full -mx-[var(--gutter)] overflow-x-auto px-[var(--gutter)] lg:col-[4/-1] lg:mx-0 lg:px-0">
         {/* `data-inview` sweeps the year in behind a scan line. */}
         <div data-inview="" className="heat-scan relative min-w-[36rem]">
           <svg

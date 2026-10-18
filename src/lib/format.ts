@@ -50,3 +50,22 @@ export function formatDate(value: string): string {
 export function formatNumber(value: number): string {
   return numberFormatter.format(value)
 }
+
+const SMALL_NUMBERS = [
+  'zero',
+  'one',
+  'two',
+  'three',
+  'four',
+  'five',
+  'six',
+  'seven',
+  'eight',
+  'nine',
+  'ten',
+]
+
+/** `4` → `four`; numbers above ten stay as digits. */
+export function spellNumber(value: number): string {
+  return SMALL_NUMBERS[value] ?? String(value)
+}

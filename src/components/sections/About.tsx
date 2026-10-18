@@ -1,6 +1,10 @@
-import type { ReactNode } from 'react'
-import { getCurrentRole, getPreviousRoles } from '../../lib/experience'
-import { formatList, formatPeriod, formatYearMonth } from '../../lib/format'
+import {
+  getCareerStart,
+  getCurrentRole,
+  getPreviousRoles,
+  yearsSince,
+} from '../../lib/experience'
+import { formatList, formatPeriod } from '../../lib/format'
 import type { Education, Experience, Profile } from '../../types/portfolio'
 import { Reveal } from '../ui/Reveal'
 
@@ -11,9 +15,12 @@ interface AboutProps {
   interests: string[]
 }
 
-interface Fact {
-  term: string
-  detail: ReactNode
+interface Stop {
+  key: string
+  when: string
+  title: string
+  detail: string
+  current: boolean
 }
 
 /**
@@ -38,83 +45,103 @@ function describe(profile: Profile, experience: Experience[]): string[] {
   return sentences
 }
 
-export function About({ profile, experience, education, interests }: AboutProps) {
-  const current = getCurrentRole(experience)
-  const previous = getPreviousRoles(experience)
-  const paragraphs = profile.summary ?? describe(profile, experience)
-
-  const candidates: (Fact | false | null | undefined | '')[] = [
-    current && {
-      term: 'Currently',
-      detail: (
-        <>
-          {current.role}, {current.company}
-          <Meta>Since {formatYearMonth(current.period.start)}</Meta>
-        </>
-      ),
-    },
-    previous.length > 0 && {
-      term: 'Previously',
-      detail: previous.map((role) => (
-        <span key={role.id} className="block">
-          {role.role}, {role.company}
-          <Meta>{formatPeriod(role.period)}</Meta>
-        </span>
-      )),
-    },
-    profile.location && { term: 'Based in', detail: profile.location },
-    education.length > 0 && {
-      term: 'Education',
-      detail: education.map((entry) => (
-        <span key={entry.institution} className="block [&+&]:mt-3">
-          {entry.qualification}, {entry.institution}
-          <Meta>
-            {entry.period}
-            {entry.grade && ` · ${entry.grade}`}
-          </Meta>
-        </span>
-      )),
-    },
-    interests.length > 0 && {
-      term: 'Outside work',
-      detail: interests.join(', '),
-    },
+/** The three outlined lines, e.g. "5+ years / of front-end / with React." */
+function manifesto(profile: Profile, experience: Experience[]): string[] {
+  const start = getCareerStart(experience)
+  // A tool used in every role, in the current role's order.
+  const [constant] = experience[0]?.stack.filter((tool) =>
+    experience.every((role) => role.stack.includes(tool)),
+  ) ?? []
+  if (!start) return [profile.title]
+  return [
+    `${yearsSince(start)}+ years`,
+    'of front-end',
+    constant ? `with ${constant}.` : 'and counting.',
   ]
-  const facts = candidates.filter((fact): fact is Fact => Boolean(fact))
-
-  return (
-    <div className="grid gap-12 lg:grid-cols-12 lg:gap-8">
-      <Reveal className="space-y-5 lg:col-span-7">
-        {paragraphs.map((paragraph, index) => (
-          <p
-            key={paragraph}
-            className={
-              index === 0
-                ? 'text-[clamp(1.375rem,2.4vw,1.875rem)] leading-snug font-medium tracking-tight text-ink text-pretty'
-                : 'text-lg leading-relaxed text-muted text-pretty'
-            }
-          >
-            {paragraph}
-          </p>
-        ))}
-      </Reveal>
-
-      <dl className="grid gap-3 lg:col-span-5 lg:col-start-8">
-        {facts.map((fact, index) => (
-          <Reveal
-            key={fact.term}
-            index={index + 1}
-            className="card grid gap-3 p-5 sm:grid-cols-[7rem_1fr] sm:gap-6"
-          >
-            <dt className="label pt-0.5 text-faint">{fact.term}</dt>
-            <dd className="text-[15px] leading-relaxed">{fact.detail}</dd>
-          </Reveal>
-        ))}
-      </dl>
-    </div>
-  )
 }
 
-function Meta({ children }: { children: ReactNode }) {
-  return <span className="block text-sm text-faint">{children}</span>
+// Annotations beside each line, as on a design spec.
+const DIMENSIONS = ['↤ 12 col ↦', 'font-size: var(--step-4)', 'ls −0.05em']
+
+export function About({ profile, experience, education, interests }: AboutProps) {
+  const paragraphs = profile.summary ?? describe(profile, experience)
+  const lines = manifesto(profile, experience)
+
+  // Oldest first: school and university, then each role.
+  const stops: Stop[] = [
+    ...education.toReversed().map((entry) => ({
+      key: entry.institution,
+      when: entry.period,
+      title: entry.institution,
+      detail: [entry.qualification, entry.grade].filter(Boolean).join(' · '),
+      current: false,
+    })),
+    ...experience.toReversed().map((role) => ({
+      key: role.id,
+      when: formatPeriod(role.period),
+      title: role.company,
+      detail: role.role,
+      current: role.period.end === 'present',
+    })),
+  ]
+
+  return (
+    <>
+      <div>
+        {lines.map((line, index) => (
+          <div key={line} className="wf-row">
+            <p className="wf-line h1" suppressHydrationWarning={index === 0}>
+              <span aria-hidden="true" className="outline-text">
+                {line}
+              </span>
+              <span className="wf-solid">{line}</span>
+            </p>
+            <span aria-hidden="true" className="wf-dim note">
+              {DIMENSIONS[index]}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid-12 mt-[clamp(48px,7vw,112px)]">
+        <Reveal className="col-span-full space-y-5 md:col-[7/-1]">
+          {paragraphs.map((paragraph) => (
+            <p key={paragraph} className="lead">
+              {paragraph}
+            </p>
+          ))}
+          {interests.length > 0 && (
+            <p className="note pt-3">Outside work · {interests.join(', ')}</p>
+          )}
+        </Reveal>
+      </div>
+
+      <div className="mt-[clamp(64px,9vw,140px)]">
+        <p className="note mb-[clamp(2rem,4vw,3.5rem)]">
+          Path · {stops[0]?.when.slice(-4)} → now
+        </p>
+        <div aria-hidden="true" className="path-line" />
+        <ol className="grid-12 gap-y-10 md:gap-y-0">
+          {stops.map((stop, index) => (
+            <Reveal
+              key={stop.key}
+              as="li"
+              index={index}
+              className="stop col-span-full md:col-span-3"
+            >
+              <span aria-hidden="true" className="stop__dot" />
+              <span className="note block">
+                {stop.current && <span className="note--accent">Now · </span>}
+                {stop.when}
+              </span>
+              <h3 className="mt-2.5 mb-2 text-[length:var(--step-1)] tracking-[-0.02em]">
+                {stop.title}
+              </h3>
+              <p className="max-w-[30ch] text-muted">{stop.detail}</p>
+            </Reveal>
+          ))}
+        </ol>
+      </div>
+    </>
+  )
 }

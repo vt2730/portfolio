@@ -42,10 +42,10 @@ export const portfolio: Portfolio = {
 
   navigation: [
     { id: 'about', label: 'About' },
-    { id: 'skills', label: 'Skills' },
     { id: 'experience', label: 'Experience' },
     { id: 'projects', label: 'Projects' },
     { id: 'highlights', label: 'Highlights' },
+    { id: 'skills', label: 'Skills' },
     { id: 'github', label: 'GitHub' },
     { id: 'contact', label: 'Contact' },
   ],

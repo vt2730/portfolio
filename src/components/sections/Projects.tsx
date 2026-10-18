@@ -1,6 +1,5 @@
 import type { Project } from '../../types/portfolio'
 import { ButtonLink } from '../ui/ButtonLink'
-import { Icon } from '../ui/Icon'
 import { Reveal } from '../ui/Reveal'
 import { StackGraph } from '../ui/StackGraph'
 
@@ -8,129 +7,114 @@ interface ProjectsProps {
   projects: Project[]
 }
 
+const pad = (value: number) => String(value).padStart(2, '0')
+
 export function Projects({ projects }: ProjectsProps) {
-  // minmax(0, …) lets the scrollable stack map shrink with the viewport.
   return (
-    <ol className="grid grid-cols-[minmax(0,1fr)] gap-4">
-      {projects.map((project, index) => {
-        const number = String(index + 1).padStart(2, '0')
-        const primary = project.links.find((link) => link.kind === 'live')
-        const others = project.links.filter((link) => link !== primary)
+    <>
+      <Reveal as="p" className="lead mb-[clamp(2.5rem,5vw,4.5rem)] max-w-[40ch]">
+        Side projects built end to end, from schema to UI. Each one is mapped
+        by the stack it runs on.
+      </Reveal>
 
-        return (
-          <Reveal
-            key={project.id}
-            as="li"
-            index={index}
-            className="card card-hover p-6 sm:p-8"
-          >
-            <article
-              aria-labelledby={`${project.id}-title`}
-              className="grid grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-12"
-            >
-              <div className="flex flex-col">
-                <p
-                  aria-hidden="true"
-                  className="label flex items-center gap-3 text-faint"
-                >
-                  <span className="text-accent">{number}</span>
-                  <span className="draw-x h-px flex-1 bg-line" />
-                </p>
-                <h3
-                  id={`${project.id}-title`}
-                  className="mt-5 text-2xl font-semibold tracking-tight sm:text-[1.75rem]"
-                >
-                  {project.name}
-                </h3>
-                {project.links.length > 0 && (
-                  <ul className="mt-auto flex flex-wrap items-center gap-2 pt-6">
-                    {primary && (
-                      <li>
-                        <ButtonLink
-                          href={primary.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          variant="primary"
-                          size="sm"
-                        >
-                          View project
-                          <Icon
-                            name="arrow-up-right"
-                            className="nudge-out size-4"
-                          />
-                          <span className="sr-only">
-                            {' '}
-                            {project.name} (opens in a new tab)
-                          </span>
-                        </ButtonLink>
-                      </li>
-                    )}
-                    {others.map((link) => (
-                      <li key={link.href}>
-                        <ButtonLink
-                          href={link.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          variant="secondary"
-                          size="sm"
-                        >
-                          {link.kind === 'source' && (
-                            <Icon name="github" className="size-4" />
-                          )}
-                          {link.label}
-                          <Icon
-                            name="arrow-up-right"
-                            className="nudge-out size-3.5"
-                          />
-                          <span className="sr-only">
-                            {' '}
-                            for {project.name} (opens in a new tab)
-                          </span>
-                        </ButtonLink>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+      <ol className="grid gap-[clamp(4rem,9vw,8rem)]">
+        {projects.map((project, index) => {
+          const live = project.links.find((link) => link.kind === 'live')
+          const others = project.links.filter((link) => link !== live)
 
-              <div className="rounded-lg border border-line bg-canvas p-5 sm:p-6">
-                {project.image ? (
-                  <img
-                    src={project.image.src}
-                    alt={project.image.alt}
-                    loading="lazy"
-                    decoding="async"
-                    className="mb-5 w-full rounded-md border border-line"
-                  />
-                ) : null}
-                <p className="label text-faint">What it does</p>
-                <ol className="mt-4 grid gap-4">
-                  {project.features.map((feature, featureIndex) => (
-                    <li
-                      key={feature}
-                      className="grid grid-cols-[2rem_1fr] text-[15px] leading-relaxed text-muted"
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="pt-1 font-mono text-xs text-accent"
-                      >
-                        {String(featureIndex + 1).padStart(2, '0')}
+          return (
+            <Reveal key={project.id} as="li">
+              <article
+                aria-labelledby={`${project.id}-title`}
+                className="grid-12 gap-y-8"
+              >
+                <div className="col-span-full flex flex-col lg:col-span-4">
+                  <p aria-hidden="true" className="ws-count hidden lg:block">
+                    {pad(index + 1)}
+                    <span className="outline-text">/{pad(projects.length)}</span>
+                  </p>
+
+                  <div className="lg:mt-auto lg:pt-16">
+                    <div className="flex flex-wrap justify-between gap-x-4 gap-y-1">
+                      <span className="note">
+                        {pad(index + 1)} / Side project
                       </span>
-                      {feature}
-                    </li>
-                  ))}
-                </ol>
-              </div>
+                      <span className="note text-right">
+                        {project.stack.join(' · ')}
+                      </span>
+                    </div>
+                    <h3
+                      id={`${project.id}-title`}
+                      className="h3 mt-4"
+                    >
+                      {project.name}
+                    </h3>
+                    <ul className="mt-4 max-w-[42ch] space-y-1 text-muted">
+                      {project.features.map((feature) => (
+                        <li key={feature}>{feature}</li>
+                      ))}
+                    </ul>
 
-              <StackGraph
-                items={project.stack}
-                label={`Stack map for ${project.name}`}
-                className="md:col-span-2"
-              />
-            </article>
-          </Reveal>
-        )
-      })}
-    </ol>
+                    {project.links.length > 0 && (
+                      <ul className="mt-6 flex flex-wrap gap-3">
+                        {live && (
+                          <li>
+                            <ButtonLink
+                              href={live.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              arrow="out"
+                            >
+                              View project
+                              <span className="sr-only">
+                                {' '}
+                                {project.name} (opens in a new tab)
+                              </span>
+                            </ButtonLink>
+                          </li>
+                        )}
+                        {others.map((link) => (
+                          <li key={link.href}>
+                            <ButtonLink
+                              href={link.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              variant="ghost"
+                              arrow="out"
+                            >
+                              {link.kind === 'source' ? 'Source' : link.label}
+                              <span className="sr-only">
+                                {' '}
+                                for {project.name} on {link.label} (opens in a
+                                new tab)
+                              </span>
+                            </ButtonLink>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                <div className="ws-art col-span-full flex min-h-80 flex-col justify-between gap-6 p-4 sm:p-6 lg:col-[5/-1] lg:aspect-[8/5]">
+                  <div aria-hidden="true" className="flex justify-between gap-4">
+                    <span className="note note--accent">
+                      fig. {pad(index + 1)} · stack map
+                    </span>
+                    <span className="note">
+                      {project.stack.length} tools
+                    </span>
+                  </div>
+                  <StackGraph
+                    items={project.stack}
+                    label={`Stack map for ${project.name}`}
+                  />
+                </div>
+              </article>
+            </Reveal>
+          )
+        })}
+      </ol>
+    </>
   )
 }

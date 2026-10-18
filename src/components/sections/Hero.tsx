@@ -1,189 +1,177 @@
-import type { CSSProperties, ReactNode } from 'react'
+import {
+  Fragment,
+  useCallback,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react'
 import {
   getCareerStart,
   getCurrentRole,
   getPreviousRoles,
+  yearsIn,
   yearsSince,
 } from '../../lib/experience'
-import { formatYearMonth } from '../../lib/format'
-import { findLink, resumeFileName } from '../../lib/links'
+import { formatList, formatYearMonth, spellNumber } from '../../lib/format'
 import type { Experience, Profile } from '../../types/portfolio'
 import { ButtonLink } from '../ui/ButtonLink'
-import { Container } from '../ui/Container'
-import { Icon, type IconName } from '../ui/Icon'
-import { SignalGrid } from '../ui/SignalGrid'
+import { MaskWords } from '../ui/MaskWords'
+import { HeroBlueprint } from './HeroBlueprint'
+import { HeroTerrain } from './HeroTerrain'
 
 interface HeroProps {
   profile: Profile
   experience: Experience[]
 }
 
-interface MetaItem {
-  term: string
-  detail: string
+// The role line "generates" word by word after the name has drawn in.
+const GENERATE_START = 1.1 // s
+const WORD_IN = 0.5 // s, each word's fade
+
+interface GeneratedWord {
+  text: string
+  delay: number
+  /** Until the next word starts: how long the caret sits after this one. */
+  hold: number
 }
 
-function delay(ms: number): CSSProperties {
-  return {
-    '--rise-delay': `${ms}ms`,
-    '--fade-delay': `${ms}ms`,
-  } as CSSProperties
+/** Typing rhythm: uneven gaps (deterministic, so prerender and hydration
+ *  agree) and a pause after punctuation. */
+function generate(sentence: string): GeneratedWord[] {
+  const words = sentence.split(' ')
+  const delays: number[] = []
+  let time = GENERATE_START
+  words.forEach((word, index) => {
+    delays.push(time)
+    time += 0.03 + ((index * 7 + 3) % 10) / 100 + (/[.,:]$/.test(word) ? 0.22 : 0)
+  })
+  return words.map((text, index) => ({
+    text,
+    delay: delays[index],
+    hold: (delays[index + 1] ?? time) - delays[index],
+  }))
 }
 
-/** `[a, b, c]` → `a, b and c`, with each item emphasised. */
-function joinEmphasised(items: string[]): ReactNode {
-  return items.map((item, index) => (
-    <span key={item}>
-      {index > 0 && (index === items.length - 1 ? ' and ' : ', ')}
-      <strong className="font-medium text-ink">{item}</strong>
-    </span>
-  ))
+function sentenceCase(value: string): string {
+  return value.charAt(0) + value.slice(1).toLowerCase()
 }
+
+const seconds = (value: number) => `${value.toFixed(2)}s`
 
 export function Hero({ profile, experience }: HeroProps) {
+  const heroRef = useRef<HTMLElement>(null)
+  const [terrain, setTerrain] = useState(false)
+  const showTerrainNote = useCallback(() => setTerrain(true), [])
   const current = getCurrentRole(experience)
   const [previous] = getPreviousRoles(experience)
   const careerStart = getCareerStart(experience)
   const stack = current?.stack.slice(0, 4) ?? []
-  const words = profile.name.split(' ')
 
-  const socialLinks = (['github', 'linkedin'] as const)
-    .map((kind) => findLink(profile.links, kind))
-    .filter((link) => link !== undefined)
+  const role = `${sentenceCase(profile.title)}${stack.length > 0 ? ` working with ${formatList(stack)}` : ''}.`
+  const words = generate(role)
+  const last = words[words.length - 1]
+  const elapsed = Math.round((last.delay + WORD_IN - GENERATE_START) * 1000)
+  // Notes and the footer row fade in as the last words land.
+  const fade = (step: number) =>
+    ({ '--fd': seconds(last.delay - 0.1 + step * 0.08) }) as CSSProperties
 
-  // Every cell maps to a resume fact; years are derived from the role dates.
-  const meta: MetaItem[] = [
-    { term: 'Role', detail: profile.title },
-    ...(careerStart
-      ? [
-          {
-            term: 'Experience',
-            detail: `${yearsSince(careerStart)}+ years · since ${formatYearMonth(careerStart)}`,
-          },
-        ]
-      : []),
-    ...(current ? [{ term: 'Currently', detail: current.company }] : []),
-    ...(stack.length > 0 ? [{ term: 'Stack', detail: stack.join(' · ') }] : []),
-  ]
+  const intro =
+    profile.tagline ??
+    [
+      current && `Now at ${current.company}.`,
+      previous &&
+        `Before that, ${spellNumber(yearsIn(previous.period))} years at ${previous.company}`,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .replace(/([^.])$/, '$1.')
 
   return (
     <section
+      ref={heroRef}
       id="top"
       aria-labelledby="hero-heading"
-      className="relative isolate flex min-h-svh flex-col justify-center pt-28 pb-12 md:pt-32"
+      data-terrain={terrain ? '' : undefined}
+      className="hero wrap"
     >
-      <SignalGrid intro />
-
-      <Container>
+      <div className="hero__top note">
+        <span>
+          {profile.name} · {profile.title}
+        </span>
         {current && (
-          <p
-            className="label fade-in inline-flex items-center gap-2.5 rounded-full border border-line bg-surface/80 py-1.5 pr-3.5 pl-3 text-muted"
-            style={delay(0)}
-          >
-            <span className="relative flex size-2">
-              <span
-                aria-hidden="true"
-                className="absolute inset-0 animate-ping rounded-full bg-accent opacity-60 motion-reduce:hidden"
-              />
-              <span
-                aria-hidden="true"
-                className="relative size-2 rounded-full bg-accent"
-              />
-            </span>
-            {profile.title} at {current.company}
-          </p>
+          <span className="hidden md:inline">Currently · {current.company}</span>
         )}
-
-        <h1
-          id="hero-heading"
-          className="display mt-8 text-[clamp(3rem,8vw,6.5rem)]"
-        >
-          <span className="sr-only">{profile.name}</span>
-          {/* Each word rises from a mask; the words stay on one line where
-              they fit so the name reads as a wordmark. */}
-          <span aria-hidden="true" className="flex flex-wrap gap-x-[0.25em]">
-            {words.map((word, index) => (
-              <span key={`${word}-${index}`} className="mask-line">
-                <span style={delay(100 + index * 90)}>{word}</span>
-              </span>
-            ))}
+        {careerStart && (
+          <span suppressHydrationWarning>
+            {yearsSince(careerStart)}+ years · since{' '}
+            {formatYearMonth(careerStart)}
           </span>
-        </h1>
+        )}
+      </div>
 
-        <p
-          className="fade-in mt-6 max-w-2xl text-xl leading-snug text-muted text-pretty md:text-2xl"
-          style={delay(350)}
-        >
-          {profile.tagline ?? (
-            <>
-              {profile.title}
-              {stack.length > 0 && <> working with {joinEmphasised(stack)}</>}.
-              {previous && (
-                <>
-                  {' '}
-                  Previously at{' '}
-                  <strong className="font-medium text-ink">
-                    {previous.company}
-                  </strong>
-                  {previous.company.endsWith('.') ? '' : '.'}
-                </>
-              )}
-            </>
-          )}
-        </p>
-
-        <div
-          className="fade-in mt-10 flex flex-wrap items-center gap-3"
-          style={delay(450)}
-        >
-          <ButtonLink href="#projects" variant="accent">
-            View projects
-            <Icon name="arrow-down" className="nudge-down size-4" />
-          </ButtonLink>
-          <ButtonLink
-            href={profile.resumeUrl}
-            download={resumeFileName(profile.name)}
-            variant="secondary"
-          >
-            <Icon name="download" className="nudge-down size-4" />
-            Download résumé
-          </ButtonLink>
-          {socialLinks.length > 0 && (
-            <ul className="flex gap-2 sm:ml-2">
-              {socialLinks.map((link) => (
-                <li key={link.kind}>
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${link.label} (opens in a new tab)`}
-                    className="inline-flex size-11 items-center justify-center rounded-full border border-line bg-surface text-muted transition-colors duration-200 hover:border-line-strong hover:text-ink"
-                  >
-                    <Icon name={link.kind as IconName} className="size-[18px]" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <dl
-          className="fade-in rule-draw relative mt-16 grid grid-cols-2 gap-x-6 gap-y-6 pt-6 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-line md:mt-24 md:grid-cols-4"
-          style={delay(600)}
-        >
-          {meta.map((item) => (
-            <div key={item.term}>
-              <dt className="label text-faint">{item.term}</dt>
-              <dd
-                className="mt-2 text-sm leading-relaxed text-ink"
-                suppressHydrationWarning
+      <h1 id="hero-heading" className="hero__title">
+        <span data-bp="h1.name" className="hero__human display">
+          <MaskWords text={profile.name} />
+        </span>
+        <span className="sr-only">, </span>
+        <span data-bp="h1.role" className="hero__machine h2">
+          {/* Words are siblings so the caret rule can find the last one. */}
+          {words.map((word, index) => (
+            <Fragment key={`${word.text}-${index}`}>
+              <span
+                className="gen-word"
+                style={
+                  {
+                    '--d': seconds(word.delay),
+                    '--hold': seconds(word.hold),
+                  } as CSSProperties
+                }
               >
-                {item.detail}
-              </dd>
-            </div>
+                {word.text}
+              </span>
+              {index < words.length - 1 && ' '}
+            </Fragment>
           ))}
-        </dl>
-      </Container>
+        </span>
+      </h1>
+
+      <div className="hero__notes" aria-hidden="true">
+        <p className="note hero-fade" style={fade(0)}>
+          <span className="note--accent">●</span> name · set by hand
+        </p>
+        <p className="note hero-fade" style={fade(1)}>
+          <span className="note--accent">◆</span> role · generated from résumé
+          data · {words.length} words · {elapsed} ms
+        </p>
+        {/* Shown once the terrain is live (data-terrain on the hero). */}
+        <p className="note hero-fade hero__terrain" style={fade(2)}>
+          <span className="note--accent">▲</span> terrain ·{' '}
+          <span className="pointer-coarse:hidden">point</span>
+          <span className="hidden pointer-coarse:inline">tap</span> anywhere to
+          raise the ground
+        </p>
+      </div>
+
+      <div className="hero__foot">
+        <p data-bp="p.lead" className="hero__intro lead">
+          <span className="hero-fade block" style={fade(2)}>
+            {intro}
+          </span>
+        </p>
+        <div data-bp="nav.cta">
+          <div className="hero-fade flex flex-wrap gap-3" style={fade(3)}>
+            <ButtonLink href="#contact" arrow="right">
+              Get in touch
+            </ButtonLink>
+            <ButtonLink href="#projects" variant="ghost">
+              See the work
+            </ButtonLink>
+          </div>
+        </div>
+      </div>
+
+      <HeroTerrain heroRef={heroRef} onLive={showTerrainNote} />
+      <HeroBlueprint heroRef={heroRef} />
     </section>
   )
 }

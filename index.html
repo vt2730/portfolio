@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light" data-accent="blue">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,7 +9,7 @@
       content="Vikash Tiwary is a front-end developer working with React, TypeScript, Next.js and GraphQL. Experience, projects and contact details."
     />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#0a0d12" />
+    <meta name="theme-color" content="#f4f4f0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href="https://vt2730.github.io/portfolio/" />
 
@@ -30,24 +30,63 @@
     <meta name="twitter:card" content="summary_large_image" />
 
     <script>
-      // Apply the theme before first paint to avoid a flash of the wrong theme.
-      // Dark is the default; light is opt-in via the toggle.
+      // Apply theme and accent before first paint so the page never flashes
+      // the wrong colours. Keep the theme-color values in sync with --paper
+      // in src/index.css; src/lib/preferences.ts takes over after load.
       ;(function () {
-        try {
-          var dark = localStorage.getItem('theme') !== 'light'
-          document.documentElement.classList.toggle('dark', dark)
-          // Marks that scripts run, so scroll reveals can start hidden.
-          document.documentElement.classList.add('js')
-          if (!dark) {
-            document
-              .querySelector('meta[name="theme-color"]')
-              .setAttribute('content', '#fafafa')
+        var root = document.documentElement
+        var read = function (key) {
+          try {
+            return localStorage.getItem(key)
+          } catch (e) {
+            return null
           }
+        }
+        var theme = read('theme')
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light'
+        }
+        var accent = read('accent')
+        root.setAttribute('data-theme', theme)
+        if (accent === 'orange' || accent === 'lime') {
+          root.setAttribute('data-accent', accent)
+        }
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute('content', theme === 'dark' ? '#0b0b0c' : '#f4f4f0')
+        // Marks that scripts run, so entrances can start hidden.
+        root.classList.add('js')
+        // The preloader plays once per tab, never with reduced motion.
+        var seen = null
+        try {
+          seen = sessionStorage.getItem('preloaded')
+          sessionStorage.setItem('preloaded', '1')
         } catch (e) {}
+        var preload =
+          !seen && !matchMedia('(prefers-reduced-motion: reduce)').matches
+        if (!preload) root.setAttribute('data-preloaded', '')
+        // The hero entrance waits for the fonts so nothing swaps mid-motion,
+        // and for the preloader to start lifting (see .preloader in index.css).
+        var started = false
+        var ready = function () {
+          if (started) return
+          started = true
+          setTimeout(
+            function () {
+              root.classList.add('motion-ready')
+            },
+            preload ? 1450 : 0,
+          )
+        }
+        setTimeout(ready, 1500)
+        if (document.fonts) document.fonts.ready.then(ready)
+        else ready()
       })()
     </script>
   </head>
-  <body>
+  <body class="frame">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
